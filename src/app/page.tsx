@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import TestimonialsSection from '@/components/TestimonialsSection';
 
 export default function Home() {
   const [scrollY, setScrollY] = useState(0);
@@ -251,19 +252,33 @@ export default function Home() {
 
             {/* CTA Join Club Button Grid */}
             <Link 
-              href="/product/apex-gold-elite"
-              className="md:col-span-1 glass-card p-8 flex flex-col justify-between items-center text-center bg-primary-container hover:bg-white text-black transition-colors cursor-pointer group select-none"
+              href="/membership"
+              className="md:col-span-1 glass-card p-8 flex flex-col justify-between items-start group relative overflow-hidden select-none hover:border-primary-container/30 transition-colors"
             >
-              <h4 className="font-headline-md text-xl font-bold uppercase leading-none italic">
-                JOIN THE<br/>APEX CLUB
-              </h4>
-              <span className="material-symbols-outlined text-4xl text-black group-hover:translate-x-2 transition-transform font-bold">
-                trending_flat
-              </span>
+              <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary-container/5 blur-[100px] group-hover:bg-primary-container/15 transition-colors"></div>
+              <div>
+                <span className="font-label-caps text-label-caps text-primary-container border-l-2 border-primary-container pl-3 mb-6 block select-none">
+                  MEMBERSHIP
+                </span>
+                <h4 className="font-headline-md text-2xl text-primary uppercase italic leading-none mb-3">
+                  JOIN THE<br/>APEX CLUB
+                </h4>
+                <p className="font-body-md text-xs text-on-surface-variant/70 leading-relaxed">
+                  Gain exclusive early access to prototype releases, elite training, and member-only catalog drops.
+                </p>
+              </div>
+              <div className="mt-8 flex items-center gap-2 text-primary-container font-label-caps text-[10px] tracking-widest font-bold group-hover:text-primary transition-colors">
+                <span>REGISTER NOW</span>
+                <span className="material-symbols-outlined text-lg group-hover:translate-x-1.5 transition-transform font-bold">
+                  arrow_forward
+                </span>
+              </div>
             </Link>
           </div>
         </div>
       </section>
+
+      <TestimonialsSection />
     </div>
   );
 }

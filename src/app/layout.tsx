@@ -2,11 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 import 'lenis/dist/lenis.css';
 import { CartProvider } from '@/context/CartContext';
-import TopAppBar from '@/components/TopAppBar';
-import Footer from '@/components/Footer';
-import MobileFooter from '@/components/MobileFooter';
-import CartDrawer from '@/components/CartDrawer';
 import LenisProvider from '@/components/LenisProvider';
+import LayoutContent from '@/components/LayoutContent';
 
 export const metadata: Metadata = {
   title: 'Apex Pitch | Elite Football Gear',
@@ -43,13 +40,9 @@ export default function RootLayout({
       <body className="bg-background text-on-surface font-body-md selection:bg-electric-lime selection:text-black overflow-x-hidden min-h-full flex flex-col">
         <LenisProvider>
           <CartProvider>
-            <TopAppBar />
-            <CartDrawer />
-            <main className="flex-1 w-full relative">
+            <LayoutContent>
               {children}
-            </main>
-            <Footer />
-            <MobileFooter />
+            </LayoutContent>
           </CartProvider>
         </LenisProvider>
       </body>

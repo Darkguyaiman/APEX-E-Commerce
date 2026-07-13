@@ -113,7 +113,7 @@ const CartDrawer: React.FC = () => {
                     </div>
 
                     <span className="font-stats-value text-stats-value text-primary-container">
-                      ${(item.price * item.qty).toFixed(2)}
+                      RM {(item.price * item.qty).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -128,7 +128,7 @@ const CartDrawer: React.FC = () => {
             <div className="flex justify-between items-baseline mb-6 font-label-caps text-label-caps">
               <span className="text-on-surface-variant/70">TOTAL COMMITMENT</span>
               <span className="font-stats-value text-xl text-primary-container">
-                ${getCartSubtotal().toFixed(2)}
+                RM {getCartSubtotal().toFixed(2)}
               </span>
             </div>
 

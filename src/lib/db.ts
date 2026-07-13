@@ -1,8 +1,16 @@
 import mysql from 'mysql2/promise';
+import type { ResultSetHeader } from 'mysql2/promise';
 import fs from 'fs';
 import path from 'path';
 
 // Load static products for local fallback
+export interface ProductImage {
+  id?: number;
+  product_id?: number;
+  image_url: string;
+  is_main: boolean;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -17,6 +25,8 @@ export interface Product {
   description: string;
   type_chip: string | null;
   tags: string | null;
+  images?: ProductImage[];
+  faqs?: string | null;
 }
 
 export interface ProductInput {
@@ -32,6 +42,8 @@ export interface ProductInput {
   description: string;
   type_chip: string | null;
   tags: string | null;
+  images?: ProductImage[];
+  faqs?: string | null;
 }
 
 export interface Testimonial {
@@ -50,231 +62,267 @@ export interface TestimonialInput {
   rating: number;
 }
 
+interface FallbackOrder {
+  id: number;
+  first_name: string;
+  last_name: string;
+  address: string;
+  city: string;
+  zip_code: string;
+  payment_method: string;
+  card_number?: string;
+  subtotal: number;
+  tax: number;
+  total: number;
+  items: Array<{ product_id: number; size: string; qty: number; price: number }>;
+  created_at: string;
+}
+
 const STATIC_PRODUCTS: Product[] = [
   {
     id: 1,
-    name: 'Velocity Elite Neon',
-    slug: 'velocity-elite-neon',
-    price: 275.00,
-    original_price: null,
+    name: 'Nike Air Zoom Mercurial Vapor 15 Elite FG',
+    slug: 'nike-air-zoom-mercurial-vapor-15-elite-fg',
+    price: 1149.00,
+    original_price: 1249.00,
     category: 'men',
-    image_url: '/images/collection-speedlab.jpg',
-    colorway: 'ELITE PERFORMANCE / NEON',
+    image_url: '/images/product/vapor.png',
+    colorway: 'BRIGHT CRIMSON / VOLT METALLIC',
     weight_grams: '185g',
     traction_type: 'FG',
-    description: 'Engineered for explosive acceleration. The future of speed is here with our lightest, most responsive carbon-fiber chassis ever designed for the elite professional.',
-    type_chip: 'ELITE',
-    tags: 'CARBON SOLE,FEATHERWEIGHT'
+    description: 'Engineered with a football-specific 3/4 Zoom Air unit under the sole plate, providing explosive propulsion and snappy feedback.',
+    type_chip: 'ELITE SPEED',
+    tags: 'ZOOM AIR,VAPORPOSITE',
+    images: [
+      { image_url: '/images/product/vapor.png', is_main: true },
+      { image_url: '/images/product/vapor-sole.png', is_main: false },
+      { image_url: '/images/product/vapor-heel.png', is_main: false }
+    ]
   },
   {
     id: 2,
-    name: 'Apex Predator Carbon',
-    slug: 'apex-predator-carbon',
-    price: 240.00,
+    name: 'Adidas Predator Elite Fold-Over Tongue FG',
+    slug: 'adidas-predator-elite-fold-over-tongue-fg',
+    price: 1299.00,
     original_price: null,
     category: 'men',
-    image_url: '/images/product-predator.png',
-    colorway: 'FIRM GROUND / VOLT SILVER',
-    weight_grams: '195g',
+    image_url: '/images/product/predator-elite.png',
+    colorway: 'CORE BLACK / SOLAR RED',
+    weight_grams: '210g',
     traction_type: 'FG',
-    description: 'Our signature firm ground predator cleat, equipped with carbon fiber plates for optimal traction and stability.',
-    type_chip: 'ELITE',
-    tags: 'STABILITY CLAW,CARBON SOLE'
+    description: 'Featuring the return of the iconic fold-over tongue and Strikeskin grip fins for lethal control and execution in key striking zones.',
+    type_chip: 'LETHAL TOUCH',
+    tags: 'STRIKESKIN,LEGEND TONGUE'
   },
   {
     id: 3,
-    name: 'Midnight Stealth X',
-    slug: 'midnight-stealth-x',
-    price: 290.00,
+    name: 'Puma Future Ultimate FG/AG',
+    slug: 'puma-future-ultimate-fg-ag',
+    price: 999.00,
     original_price: null,
     category: 'men',
-    image_url: '/images/product-stealth.png',
-    colorway: 'ARTIFICIAL TURF / TRIPLE BLACK',
-    weight_grams: '205g',
-    traction_type: 'TF',
-    description: 'An aggressive football boot design in deep jet black with electric lime detailing on the sole plate.',
-    type_chip: 'LIMITED DROP',
-    tags: 'GRIP-SKIN,PRO-FIT'
+    image_url: '/images/product/future.png',
+    colorway: 'BLUE GLIMMER / WHITE',
+    weight_grams: '190g',
+    traction_type: 'FG/AG',
+    description: 'Designed with FUZIONFIT360 dual mesh upper and PWRTAPE reinforcement for adaptive support and lock-down agility.',
+    type_chip: 'AGILITY CORE',
+    tags: 'FUZIONFIT,PWRTAPE'
   },
   {
     id: 4,
-    name: 'Titan SG Reinforced',
-    slug: 'titan-sg-reinforced',
-    price: 215.00,
-    original_price: 260.00,
+    name: 'Nike Phantom GX II Elite FG',
+    slug: 'nike-phantom-gx-ii-elite-fg',
+    price: 1099.00,
+    original_price: null,
     category: 'men',
-    image_url: '/images/product-titan.png',
-    colorway: 'SOFT GROUND / SLATE NEON',
-    weight_grams: '220g',
-    traction_type: 'SG',
-    description: 'A football boot optimized for soft ground conditions, featuring long metal studs for maximum grip.',
-    type_chip: 'NEW ARRIVAL',
-    tags: 'METAL STUDS,ARMOR WEAVE'
+    image_url: '/images/product/ghost.png',
+    colorway: 'VOLT / WOLF GREY',
+    weight_grams: '195g',
+    traction_type: 'FG',
+    description: 'Equipped with revolutionary Gripknit touch skins and the Cyclone 360 traction plate for surgical precision and pivot agility.',
+    type_chip: 'CONTROL PRO',
+    tags: 'GRIPKNIT,CYCLONE 360'
   },
   {
     id: 5,
-    name: 'Ghost Pro White',
-    slug: 'ghost-pro-white',
-    price: 195.00,
+    name: 'Mizuno Morelia Neo IV Beta Japan FG',
+    slug: 'mizuno-morelia-neo-iv-beta-japan-fg',
+    price: 1399.00,
     original_price: null,
     category: 'men',
-    image_url: '/images/product-ghost.png',
-    colorway: 'FIRM GROUND / PURE WHITE',
-    weight_grams: '180g',
+    image_url: '/images/product/mizuno.png',
+    colorway: 'PURA WHITE / GOLD',
+    weight_grams: '175g',
     traction_type: 'FG',
-    description: 'Professional grade football boot in a pristine white colorway with geometric carbon-fiber textures.',
-    type_chip: null,
-    tags: 'TRANSLUCENT UPPER,FEATHERWEIGHT'
+    description: 'Handcrafted in Japan with premium K-Leather for a barefoot feel and ultimate structural precision. The pinnacle of craftsmanship.',
+    type_chip: 'HANDCRAFTED',
+    tags: 'K-LEATHER,MADE IN JAPAN'
   },
   {
     id: 6,
-    name: 'Crimson Agility',
-    slug: 'crimson-agility',
-    price: 265.00,
+    name: 'Nike Zoom Mercurial Superfly 9 Academy TF',
+    slug: 'nike-zoom-mercurial-superfly-9-academy-tf',
+    price: 379.00,
     original_price: null,
-    category: 'women',
-    image_url: '/images/collection-womens.jpg',
-    colorway: "WOMEN'S ELITE / CRIMSON",
-    weight_grams: '170g',
-    traction_type: 'FG',
-    description: 'The Crimson Agility collection redefines the game. Engineered with women-specific bio-mechanics for lethal speed and surgical precision.',
-    type_chip: 'ELITE',
-    tags: 'REACT CUSHIONING,360 FIT'
+    category: 'men',
+    image_url: '/images/product/stealth.png',
+    colorway: 'METALLIC COPPER',
+    weight_grams: '220g',
+    traction_type: 'TF',
+    description: 'Artificial turf soccer shoe featuring a low-profile rubber outsole, sock-like collar lock-down, and a springy Zoom Air heel unit.',
+    type_chip: 'BEST SELLER',
+    tags: 'ZOOM AIR,TURF TRACK'
   },
   {
     id: 7,
-    name: 'Crimson Vapor Elite',
-    slug: 'crimson-vapor-elite',
-    price: 249.99,
-    original_price: 299.99,
+    name: 'Nike Women\'s Phantom Luna II Elite FG',
+    slug: 'nike-womens-phantom-luna-ii-elite-fg',
+    price: 1149.00,
+    original_price: null,
     category: 'women',
-    image_url: '/images/product-crimson-vapor.png',
-    colorway: 'FIRM GROUND / CRIMSON RED',
-    weight_grams: '160g',
+    image_url: '/images/product/crimson-vapor.png',
+    colorway: 'SUNSET CRIMSON / VOLT',
+    weight_grams: '180g',
     traction_type: 'FG',
-    description: "A sleek crimson red and white women's football boot with a white carbon fiber texture and lightweight fit.",
-    type_chip: 'ELITE',
-    tags: 'LIGHTWEIGHT,FIRM GROUND'
+    description: 'Specifically engineered for female athletes, featuring the Cyclone 360 stud layout for rotational traction and high-cuff lock-down collar.',
+    type_chip: 'ELITE AGILITY',
+    tags: 'CYCLONE 360,FIT-GRID'
   },
   {
     id: 8,
-    name: 'Apex Ghost Phantom',
-    slug: 'apex-ghost-phantom',
-    price: 274.99,
+    name: 'Puma Women\'s Ultra Ultimate FG/AG',
+    slug: 'puma-womens-ultra-ultimate-fg-ag',
+    price: 999.00,
     original_price: null,
     category: 'women',
-    image_url: '/images/product-ghost-phantom.png',
-    colorway: 'ALL CONDITIONS / WHITE & LIME',
-    weight_grams: '175g',
-    traction_type: 'AG/FG',
-    description: 'Dynamic side profile cleat focusing on the intricate texture of the knit upper and anatomical mapping.',
-    type_chip: 'LIMITED RELEASE',
-    tags: '360 FIT,ALL CONDITIONS'
+    image_url: '/images/product/ghost-phantom.png',
+    colorway: 'FIERY CORAL / GOLD',
+    weight_grams: '155g',
+    traction_type: 'FG/AG',
+    description: 'Featherweight speed cleat with ULTRAWEAVE upper material and speedplate sole for blistering pace and rapid transitions.',
+    type_chip: 'LIGHTEST YET',
+    tags: 'ULTRAWEAVE,SPEEDPLATE'
   },
   {
     id: 9,
-    name: 'Velocity React Pro',
-    slug: 'velocity-react-pro',
-    price: 219.99,
+    name: 'Adidas Women\'s Copa Pure 2.1 FG',
+    slug: 'adidas-womens-copa-pure-21-fg',
+    price: 899.00,
     original_price: null,
     category: 'women',
-    image_url: '/images/product-velocity-react.png',
-    colorway: 'ELITE / DEEP CRIMSON RED',
-    weight_grams: '180g',
+    image_url: '/images/product/velocity-react.png',
+    colorway: 'PURA WHITE / SILENT BLUE',
+    weight_grams: '195g',
     traction_type: 'FG',
-    description: 'A high-tech soccer boot for women featuring a deep crimson red colorway with shimmering black carbon fiber accents.',
-    type_chip: 'NEW',
-    tags: 'PRECISION,ELITE'
+    description: 'Ultra-comfortable leather boot featuring a Fusionskin leather forefoot for pillow-soft touch and stable heel counter fit.',
+    type_chip: 'PURE TOUCH',
+    tags: 'FUSIONSKIN,COPA LAST'
   },
   {
     id: 10,
-    name: 'Merc Alpha X',
-    slug: 'merc-alpha-x',
-    price: 199.99,
+    name: 'Nike Women\'s Tiempo Legend 10 Elite FG',
+    slug: 'nike-womens-tiempo-legend-10-elite-fg',
+    price: 1049.00,
     original_price: null,
     category: 'women',
-    image_url: '/images/product-merc-alpha.png',
-    colorway: 'STREET / CRIMSON & SILVER',
-    weight_grams: '165g',
-    traction_type: 'STREET',
-    description: 'Professional cleat designed specifically for female athletes, featuring unique anatomical fit and styling.',
-    type_chip: 'RESTOCKING SOON',
-    tags: 'SPEED CORE,STREET'
+    image_url: '/images/product/merc-alpha.png',
+    colorway: 'MATTE PLATINUM / PINK',
+    weight_grams: '185g',
+    traction_type: 'FG',
+    description: 'Engineered with FlyTouch Plus leather alternative for superior touch control without water absorption. A masterclass in comfort.',
+    type_chip: 'LEGEND FIT',
+    tags: 'FLYTOUCH PLUS,MICRO-DOTS'
   },
   {
     id: 11,
-    name: 'Apex Gold Elite',
-    slug: 'apex-gold-elite',
-    price: 249.99,
+    name: 'Puma Future Match Women\'s Turf',
+    slug: 'puma-future-match-womens-turf',
+    price: 399.00,
     original_price: null,
-    category: 'men',
-    image_url: '/images/hero-gold-elite.jpg',
-    colorway: 'CARBON / VOLT GOLD',
-    weight_grams: '165g',
-    traction_type: 'SG/FG HYBRID',
-    description: 'Engineered for the decisive moment. The Apex Gold Elite features our proprietary Grip Control Pro skin and a reinforced carbon-fiber plate for maximum energy return.',
-    type_chip: 'ELITE LEVEL',
-    tags: 'GRIP CONTROL,CARBON CORE'
+    category: 'women',
+    image_url: '/images/product/crimson-vapor.png',
+    colorway: 'CRIMSON / ELECTRIC LIME',
+    weight_grams: '210g',
+    traction_type: 'TF',
+    description: 'Turf execution of the Future franchise, carrying an adaptable mid-cut collar and multi-studded rubber outsole for high grip.',
+    type_chip: 'RESTOCKED',
+    tags: 'TURF STUD,FUZIONFIT'
   },
   {
     id: 12,
-    name: 'Core Compression Socks',
-    slug: 'core-compression-socks',
-    price: 24.00,
+    name: 'Nike Strike Luminous Ball Size 5',
+    slug: 'nike-strike-luminous-ball-size-5',
+    price: 129.00,
     original_price: null,
     category: 'kit',
-    image_url: '/images/kit-socks.jpg',
-    colorway: 'MATTE BLACK',
-    weight_grams: '45g',
+    image_url: '/images/product/hero-gold-elite.jpg',
+    colorway: 'VOLT / REFLECTIVE GREY',
+    weight_grams: '420g',
     traction_type: 'ALL-WEATHER',
-    description: 'High-performance compression soccer socks with arch support.',
-    type_chip: null,
-    tags: 'COMPRESSION,ARCH SUPPORT'
+    description: 'Engineered with Aerowsculpt textured grooves for stable flight and high-contrast visuals to track easily in bad light.',
+    type_chip: 'TRAINING',
+    tags: 'AEROWSCULPT,SIZE 5'
   },
   {
     id: 13,
-    name: 'Pro Carbon Shields',
-    slug: 'pro-carbon-shields',
-    price: 65.00,
+    name: 'Adidas Creator Compression Shin Guards',
+    slug: 'adidas-creator-compression-shin-guards',
+    price: 179.00,
     original_price: null,
     category: 'kit',
-    image_url: '/images/kit-shields.jpg',
-    colorway: 'CARBON HIVE',
-    weight_grams: '75g',
-    traction_type: 'IMPACT',
-    description: 'Aerodynamic lightweight carbon fiber shin guards with honeycomb shock absorbing pads.',
-    type_chip: null,
-    tags: 'CARBON FIBER,SHIELD'
+    image_url: '/images/product/kit-shields.jpg',
+    colorway: 'CARBON BLACK',
+    weight_grams: '65g',
+    traction_type: 'IMPACT COMPRESSION',
+    description: 'Equipped with carbon-infused hard shields and premium compression sleeve pockets for secure slippage prevention.',
+    type_chip: 'PROTECTION',
+    tags: 'HARD SHIELD,SLEEVE POCKET'
   },
   {
     id: 14,
-    name: 'Apex Match Day Duffel',
-    slug: 'apex-match-day-duffel',
-    price: 85.00,
+    name: 'Grip Sox Pro Tech Grip Socks',
+    slug: 'grip-sox-pro-tech-grip-socks',
+    price: 69.00,
     original_price: null,
     category: 'kit',
-    image_url: '/images/kit-duffel.jpg',
-    colorway: 'MATTE BLACK',
-    weight_grams: '850g',
-    traction_type: 'WATERPROOF',
-    description: 'A matte black performance duffel bag with waterproof zippers and shoe ventilation.',
-    type_chip: null,
-    tags: 'WATERPROOF,VENTILATED'
+    image_url: '/images/product/kit-socks.jpg',
+    colorway: 'TRIPLE BLACK',
+    weight_grams: '50g',
+    traction_type: 'IN-BOOT GRIP',
+    description: 'Premium soccer grip socks featuring silicone pads on both interior and exterior surfaces to eliminate in-boot foot slippage.',
+    type_chip: 'PERFORMANCE ESSENTIAL',
+    tags: 'ANTI-SLIP,SILICONE GRIP'
   },
   {
     id: 15,
-    name: 'Tech Dri-Fit Top',
-    slug: 'tech-dri-fit-top',
-    price: 45.00,
+    name: 'Nike Academy Team Duffel Bag Medium',
+    slug: 'nike-academy-team-duffel-bag-medium',
+    price: 189.00,
     original_price: null,
     category: 'kit',
-    image_url: '/images/kit-top.jpg',
-    colorway: 'GOLD HEAT-PRESS',
-    weight_grams: '120g',
-    traction_type: 'BREATHABLE',
-    description: 'High-quality black training jersey with gold heat-pressed logo and moisture wicking.',
-    type_chip: null,
-    tags: 'DRI-FIT,BREATHABLE'
+    image_url: '/images/product/kit-duffel.jpg',
+    colorway: 'MATTE BLACK',
+    weight_grams: '650g',
+    traction_type: 'WATERPROOF BASE',
+    description: 'Heavy-duty polyester duffel featuring dedicated wet/dry storage compartments, waterproof bottom panel, and ventilated boot pockets.',
+    type_chip: 'GEAR BAG',
+    tags: 'WET-DRY SEPARATION,BOOT POCKET'
+  },
+  {
+    id: 16,
+    name: 'Under Armour HeatGear Compression Top',
+    slug: 'under-armour-heatgear-compression-top',
+    price: 139.00,
+    original_price: null,
+    category: 'kit',
+    image_url: '/images/product/kit-top.jpg',
+    colorway: 'CHARCOAL BLACK / GOLD',
+    weight_grams: '110g',
+    traction_type: 'COMPRESSION',
+    description: 'Ultra-tight second-skin compression top with moisture-wicking technology and mesh underarm panels for cooling comfort.',
+    type_chip: 'BASE LAYER',
+    tags: 'HEATGEAR,MOISTURE-WICKING'
   }
 ];
 
@@ -320,6 +368,10 @@ const STATIC_TESTIMONIALS: Testimonial[] = [
 let pool: mysql.Pool | null = null;
 let isMockDb = false;
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Unknown error';
+}
+
 function readJsonFile<T>(filePath: string, fallback: T): T {
   if (!fs.existsSync(filePath)) return fallback;
   try {
@@ -358,7 +410,7 @@ function getPool() {
   if (!pool) {
     try {
       pool = mysql.createPool(poolConfig);
-    } catch (e) {
+    } catch {
       console.warn('Could not create MySQL connection pool. Falling back to local static JSON data.');
       isMockDb = true;
     }
@@ -375,14 +427,17 @@ export async function checkConnection(): Promise<{ connected: boolean; message: 
     const conn = await p.getConnection();
     conn.release();
     return { connected: true, message: `Connected to MySQL: ${poolConfig.database}@${poolConfig.host}` };
-  } catch (e: any) {
-    console.warn(`MySQL connection error: ${e.message}. Using Local Mock Database fallback.`);
+  } catch (e: unknown) {
+    const message = getErrorMessage(e);
+    console.warn(`MySQL connection error: ${message}. Using Local Mock Database fallback.`);
     isMockDb = true;
-    return { connected: false, message: `Disconnected: ${e.message} (Using local mock data)` };
+    return { connected: false, message: `Disconnected: ${message} (Using local mock data)` };
   }
 }
 
-export async function rawQuery<T>(sql: string, params?: any[]): Promise<T> {
+type QueryParam = string | number | boolean | null;
+
+export async function rawQuery<T>(sql: string, params?: QueryParam[]): Promise<T> {
   const { connected } = await checkConnection();
   if (!connected || isMockDb) {
     throw new Error('MySQL disconnected, using local fallback handler');
@@ -397,13 +452,13 @@ export async function getProducts(category?: string): Promise<Product[]> {
     if (isMockDb) throw new Error('Local fallback triggered');
     
     let sql = 'SELECT * FROM products';
-    const params: any[] = [];
+    const params: QueryParam[] = [];
     if (category) {
       sql += ' WHERE category = ?';
       params.push(category);
     }
     return await rawQuery<Product[]>(sql, params);
-  } catch (e) {
+  } catch {
     // Local static fallback
     const fallbackProducts = readFallbackProducts();
     if (category) {
@@ -417,9 +472,19 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
     if (isMockDb) throw new Error('Local fallback triggered');
     const rows = await rawQuery<Product[]>('SELECT * FROM products WHERE slug = ?', [slug]);
-    return rows.length > 0 ? rows[0] : null;
-  } catch (e) {
-    return readFallbackProducts().find(p => p.slug === slug) || null;
+    if (rows.length > 0) {
+      const product = rows[0];
+      const images = await rawQuery<ProductImage[]>('SELECT * FROM product_images WHERE product_id = ?', [product.id]);
+      product.images = images;
+      return product;
+    }
+    return null;
+  } catch {
+    const product = readFallbackProducts().find(p => p.slug === slug) || null;
+    if (product && !product.images) {
+      product.images = [{ image_url: product.image_url, is_main: true }];
+    }
+    return product;
   }
 }
 
@@ -427,9 +492,19 @@ export async function getProductById(id: number): Promise<Product | null> {
   try {
     if (isMockDb) throw new Error('Local fallback triggered');
     const rows = await rawQuery<Product[]>('SELECT * FROM products WHERE id = ?', [id]);
-    return rows.length > 0 ? rows[0] : null;
-  } catch (e) {
-    return readFallbackProducts().find(p => p.id === id) || null;
+    if (rows.length > 0) {
+      const product = rows[0];
+      const images = await rawQuery<ProductImage[]>('SELECT * FROM product_images WHERE product_id = ?', [product.id]);
+      product.images = images;
+      return product;
+    }
+    return null;
+  } catch {
+    const product = readFallbackProducts().find(p => p.id === id) || null;
+    if (product && !product.images) {
+      product.images = [{ image_url: product.image_url, is_main: true }];
+    }
+    return product;
   }
 }
 
@@ -438,34 +513,76 @@ export async function createProduct(product: ProductInput): Promise<Product> {
     const { connected } = await checkConnection();
     if (!connected || isMockDb) throw new Error('Local fallback triggered');
 
-    const result = await rawQuery<mysql.ResultSetHeader>(
+    // Determine the main image
+    let mainImageUrl = product.image_url;
+    if (product.images && product.images.length > 0) {
+      const mainImg = product.images.find(img => img.is_main) || product.images[0];
+      mainImageUrl = mainImg.image_url;
+    }
+
+    const result = await rawQuery<ResultSetHeader>(
       `INSERT INTO products
-       (name, slug, price, original_price, category, image_url, colorway, weight_grams, traction_type, description, type_chip, tags)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (name, slug, price, original_price, category, image_url, colorway, weight_grams, traction_type, description, type_chip, tags, faqs)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         product.name,
         product.slug,
         product.price,
         product.original_price,
         product.category,
-        product.image_url,
+        mainImageUrl,
         product.colorway,
         product.weight_grams,
         product.traction_type,
         product.description,
         product.type_chip,
-        product.tags
+        product.tags,
+        product.faqs || null
       ]
     );
 
-    return { id: result.insertId, ...product };
-  } catch (e) {
+    const newProductId = result.insertId;
+
+    // Save product images
+    if (product.images && product.images.length > 0) {
+      for (const img of product.images) {
+        await rawQuery(
+          'INSERT INTO product_images (product_id, image_url, is_main) VALUES (?, ?, ?)',
+          [newProductId, img.image_url, img.is_main]
+        );
+      }
+    } else {
+      await rawQuery(
+        'INSERT INTO product_images (product_id, image_url, is_main) VALUES (?, ?, TRUE)',
+        [newProductId, mainImageUrl]
+      );
+    }
+
+    const createdProduct = { ...product, id: newProductId, image_url: mainImageUrl };
+    const images = await rawQuery<ProductImage[]>('SELECT * FROM product_images WHERE product_id = ?', [newProductId]);
+    createdProduct.images = images;
+    return createdProduct;
+  } catch {
     const products = readFallbackProducts();
     if (products.some((item) => item.slug === product.slug)) {
       throw new Error('A product with this slug already exists.');
     }
 
-    const createdProduct = { id: nextLocalId(products), ...product };
+    let mainImageUrl = product.image_url;
+    let imagesList = product.images || [];
+    if (imagesList.length > 0) {
+      const mainImg = imagesList.find(img => img.is_main) || imagesList[0];
+      mainImageUrl = mainImg.image_url;
+    } else {
+      imagesList = [{ image_url: mainImageUrl, is_main: true }];
+    }
+
+    const createdProduct = { 
+      id: nextLocalId(products), 
+      ...product, 
+      image_url: mainImageUrl,
+      images: imagesList 
+    };
     writeFallbackProducts([...products, createdProduct]);
     return createdProduct;
   }
@@ -476,10 +593,17 @@ export async function updateProduct(id: number, product: ProductInput): Promise<
     const { connected } = await checkConnection();
     if (!connected || isMockDb) throw new Error('Local fallback triggered');
 
-    await rawQuery<mysql.ResultSetHeader>(
+    // Determine the main image
+    let mainImageUrl = product.image_url;
+    if (product.images && product.images.length > 0) {
+      const mainImg = product.images.find(img => img.is_main) || product.images[0];
+      mainImageUrl = mainImg.image_url;
+    }
+
+    await rawQuery<ResultSetHeader>(
       `UPDATE products
        SET name = ?, slug = ?, price = ?, original_price = ?, category = ?, image_url = ?, colorway = ?,
-           weight_grams = ?, traction_type = ?, description = ?, type_chip = ?, tags = ?
+           weight_grams = ?, traction_type = ?, description = ?, type_chip = ?, tags = ?, faqs = ?
        WHERE id = ?`,
       [
         product.name,
@@ -487,19 +611,40 @@ export async function updateProduct(id: number, product: ProductInput): Promise<
         product.price,
         product.original_price,
         product.category,
-        product.image_url,
+        mainImageUrl,
         product.colorway,
         product.weight_grams,
         product.traction_type,
         product.description,
         product.type_chip,
         product.tags,
+        product.faqs || null,
         id
       ]
     );
 
-    return { id, ...product };
-  } catch (e) {
+    // Update product images
+    await rawQuery('DELETE FROM product_images WHERE product_id = ?', [id]);
+    
+    if (product.images && product.images.length > 0) {
+      for (const img of product.images) {
+        await rawQuery(
+          'INSERT INTO product_images (product_id, image_url, is_main) VALUES (?, ?, ?)',
+          [id, img.image_url, img.is_main]
+        );
+      }
+    } else {
+      await rawQuery(
+        'INSERT INTO product_images (product_id, image_url, is_main) VALUES (?, ?, TRUE)',
+        [id, mainImageUrl]
+      );
+    }
+
+    const updatedProduct = { ...product, id, image_url: mainImageUrl };
+    const images = await rawQuery<ProductImage[]>('SELECT * FROM product_images WHERE product_id = ?', [id]);
+    updatedProduct.images = images;
+    return updatedProduct;
+  } catch {
     const products = readFallbackProducts();
     const productIndex = products.findIndex((item) => item.id === id);
     if (productIndex === -1) {
@@ -509,11 +654,38 @@ export async function updateProduct(id: number, product: ProductInput): Promise<
       throw new Error('A product with this slug already exists.');
     }
 
-    const updatedProduct = { id, ...product };
+    let mainImageUrl = product.image_url;
+    let imagesList = product.images || [];
+    if (imagesList.length > 0) {
+      const mainImg = imagesList.find(img => img.is_main) || imagesList[0];
+      mainImageUrl = mainImg.image_url;
+    } else {
+      imagesList = [{ image_url: mainImageUrl, is_main: true }];
+    }
+
+    const updatedProduct = { 
+      id, 
+      ...product, 
+      image_url: mainImageUrl,
+      images: imagesList 
+    };
     const nextProducts = [...products];
     nextProducts[productIndex] = updatedProduct;
     writeFallbackProducts(nextProducts);
     return updatedProduct;
+  }
+}
+
+export async function deleteProduct(id: number): Promise<void> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    await rawQuery('DELETE FROM products WHERE id = ?', [id]);
+  } catch {
+    const products = readFallbackProducts();
+    const nextProducts = products.filter(p => p.id !== id);
+    writeFallbackProducts(nextProducts);
   }
 }
 
@@ -525,7 +697,7 @@ export async function getTestimonials(): Promise<Testimonial[]> {
     return await rawQuery<Testimonial[]>(
       'SELECT * FROM testimonials ORDER BY created_at DESC, id DESC'
     );
-  } catch (e) {
+  } catch {
     return readFallbackTestimonials().sort((a, b) => b.id - a.id);
   }
 }
@@ -535,7 +707,7 @@ export async function createTestimonial(testimonial: TestimonialInput): Promise<
     const { connected } = await checkConnection();
     if (!connected || isMockDb) throw new Error('Local fallback triggered');
 
-    const result = await rawQuery<mysql.ResultSetHeader>(
+    const result = await rawQuery<ResultSetHeader>(
       `INSERT INTO testimonials (customer_name, role, quote, rating)
        VALUES (?, ?, ?, ?)`,
       [
@@ -551,7 +723,7 @@ export async function createTestimonial(testimonial: TestimonialInput): Promise<
       ...testimonial,
       created_at: new Date().toISOString()
     };
-  } catch (e) {
+  } catch {
     const testimonials = readFallbackTestimonials();
     const createdTestimonial = {
       id: nextLocalId(testimonials),
@@ -560,6 +732,63 @@ export async function createTestimonial(testimonial: TestimonialInput): Promise<
     };
     writeFallbackTestimonials([...testimonials, createdTestimonial]);
     return createdTestimonial;
+  }
+}
+
+export async function getTestimonialById(id: number): Promise<Testimonial | null> {
+  try {
+    if (isMockDb) throw new Error('Local fallback triggered');
+    const rows = await rawQuery<Testimonial[]>('SELECT * FROM testimonials WHERE id = ?', [id]);
+    return rows.length > 0 ? rows[0] : null;
+  } catch {
+    return readFallbackTestimonials().find(t => t.id === id) || null;
+  }
+}
+
+export async function updateTestimonial(id: number, testimonial: TestimonialInput): Promise<Testimonial> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    await rawQuery<ResultSetHeader>(
+      `UPDATE testimonials
+       SET customer_name = ?, role = ?, quote = ?, rating = ?
+       WHERE id = ?`,
+      [
+        testimonial.customer_name,
+        testimonial.role,
+        testimonial.quote,
+        testimonial.rating,
+        id
+      ]
+    );
+
+    return { id, ...testimonial };
+  } catch {
+    const testimonials = readFallbackTestimonials();
+    const testimonialIndex = testimonials.findIndex((t) => t.id === id);
+    if (testimonialIndex === -1) {
+      throw new Error('Testimonial not found.');
+    }
+
+    const updatedTestimonial = { id, ...testimonial };
+    const nextTestimonials = [...testimonials];
+    nextTestimonials[testimonialIndex] = updatedTestimonial;
+    writeFallbackTestimonials(nextTestimonials);
+    return updatedTestimonial;
+  }
+}
+
+export async function deleteTestimonial(id: number): Promise<void> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    await rawQuery('DELETE FROM testimonials WHERE id = ?', [id]);
+  } catch {
+    const testimonials = readFallbackTestimonials();
+    const nextTestimonials = testimonials.filter(t => t.id !== id);
+    writeFallbackTestimonials(nextTestimonials);
   }
 }
 
@@ -608,7 +837,7 @@ export async function createOrder(
         ]
       );
 
-      const orderId = (res as any).insertId;
+      const orderId = (res as ResultSetHeader).insertId;
 
       for (const item of items) {
         await conn.execute(
@@ -625,14 +854,14 @@ export async function createOrder(
     } finally {
       conn.release();
     }
-  } catch (e) {
+  } catch {
     // Write orders to a local fallback file
     const fallbackPath = path.join(process.cwd(), '.orders_fallback.json');
-    let ordersList: any[] = [];
+    let ordersList: FallbackOrder[] = [];
     if (fs.existsSync(fallbackPath)) {
       try {
         ordersList = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
-      } catch (err) {
+      } catch {
         ordersList = [];
       }
     }

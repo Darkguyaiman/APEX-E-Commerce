@@ -92,17 +92,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div>
           <div className="flex justify-between items-start mb-2 gap-4">
             <Link href={`/product/${product.slug}`} className="hover:text-primary-container transition-colors">
-              <h3 className="font-headline-md text-xl uppercase italic tracking-tighter leading-none">
+              <h3 className="font-headline-md text-xl uppercase italic tracking-tight leading-none">
                 {product.name}
               </h3>
             </Link>
             <div className="flex flex-col items-end">
               <span className="font-stats-value text-stats-value text-primary-container leading-none">
-                ${Number(product.price).toFixed(2).replace(/\.00$/, '')}
+                RM {Number(product.price).toFixed(2).replace(/\.00$/, '')}
               </span>
               {product.original_price && (
                 <span className="text-[10px] text-on-surface-variant line-through mt-1">
-                  ${Number(product.original_price).toFixed(2).replace(/\.00$/, '')}
+                  RM {Number(product.original_price).toFixed(2).replace(/\.00$/, '')}
                 </span>
               )}
             </div>

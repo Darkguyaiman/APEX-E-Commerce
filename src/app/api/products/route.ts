@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
-import { createProduct, getProducts, ProductInput } from '@/lib/db';
+import { createProduct, getProducts, type ProductInput } from '@/lib/db';
+import { isAdminRequest } from '@/lib/adminAuth';
 
-function parseProductPayload(payload: any): ProductInput {
+type ProductPayload = Record<string, unknown>;
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Internal server error';
+}
+
+function parseProductPayload(payload: ProductPayload): ProductInput {
   const requiredFields = [
     'name',
     'slug',
@@ -32,6 +39,13 @@ function parseProductPayload(payload: any): ProductInput {
     throw new Error('original_price must be empty or a positive number');
   }
 
+  const images = Array.isArray(payload.images)
+    ? payload.images.map((img: any) => ({
+        image_url: String(img.image_url).trim(),
+        is_main: Boolean(img.is_main)
+      }))
+    : undefined;
+
   return {
     name: String(payload.name).trim(),
     slug: String(payload.slug).trim().toLowerCase(),
@@ -44,7 +58,9 @@ function parseProductPayload(payload: any): ProductInput {
     traction_type: String(payload.traction_type).trim(),
     description: String(payload.description).trim(),
     type_chip: payload.type_chip ? String(payload.type_chip).trim() : null,
-    tags: payload.tags ? String(payload.tags).trim() : null
+    tags: payload.tags ? String(payload.tags).trim() : null,
+    images,
+    faqs: payload.faqs ? String(payload.faqs).trim() : null
   };
 }
 
@@ -55,22 +71,26 @@ export async function GET(request: Request) {
     
     const products = await getProducts(category);
     return NextResponse.json(products);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Error fetching products API:', e);
-    return NextResponse.json({ error: e.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: getErrorMessage(e) }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const payload = await request.json();
+    if (!isAdminRequest(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = await request.json() as ProductPayload;
     const product = parseProductPayload(payload);
     const createdProduct = await createProduct(product);
 
     return NextResponse.json(createdProduct, { status: 201 });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Error creating product API:', e);
-    return NextResponse.json({ error: e.message || 'Internal server error' }, { status: 400 });
+    return NextResponse.json({ error: getErrorMessage(e) }, { status: 400 });
   }
 }
 

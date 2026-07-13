@@ -39,7 +39,7 @@ export default function WomenShop() {
   // Filter logic
   const filteredProducts = products.filter((p) => {
     // Avoid showing the hero product in the grid
-    if (p.slug === 'crimson-agility') return false;
+    if (p.slug === 'nike-womens-phantom-luna-ii-elite-fg') return false;
 
     // Pitch filter
     if (activeFilter !== 'ALL') {
@@ -50,7 +50,7 @@ export default function WomenShop() {
     return true;
   });
 
-  const heroProduct = products.find((p) => p.slug === 'crimson-agility') || products[0];
+  const heroProduct = products.find((p) => p.slug === 'nike-womens-phantom-luna-ii-elite-fg') || products[0];
 
   const scrollTech = () => {
     const techSection = document.getElementById('fit-technology');

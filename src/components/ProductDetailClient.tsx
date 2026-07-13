@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Product } from '@/lib/db';
 import { useCart } from '@/context/CartContext';
 
@@ -93,6 +94,15 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
   const [scrollY, setScrollY] = useState(0);
   const [addedMain, setAddedMain] = useState(false);
   const [addedKits, setAddedKits] = useState<{ [id: number]: boolean }>({});
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const imagesList = product.images && product.images.length > 0
+    ? product.images
+    : [{ image_url: product.image_url, is_main: true }];
+
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [product.image_url]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -121,40 +131,195 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
 
   const msrp = Number(product.price);
 
+  const customDetails = React.useMemo<TechDetail[]>(() => {
+    if (product.faqs) {
+      try {
+        const parsed = JSON.parse(product.faqs);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed as TechDetail[];
+        }
+      } catch (e) {
+        console.error('Error parsing product faqs:', e);
+      }
+    }
+    return (PRODUCT_TECH_DETAILS[product.slug] || [
+      { title: 'Elite Performance Tech', description: 'This professional-grade cleat features premium textures, a carbon plate layout, and responsive structural mesh engineered for the modern athlete.' },
+      { title: 'Anatomical Architecture', description: 'Engineered with anatomical contours to match the shape of the foot, reducing slippage during lateral shifts and acceleration.' }
+    ]) as TechDetail[];
+  }, [product.faqs, product.slug]);
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % imagesList.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + imagesList.length) % imagesList.length);
+  };
+
+  // Touch swipe events for mobile
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      nextImage();
+    } else if (isRightSwipe) {
+      prevImage();
+    }
+  };
+
+  // Mouse swipe/drag events for desktop
+  const [mouseDownX, setMouseDownX] = useState<number | null>(null);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return; // Only track left clicks
+    setMouseDownX(e.clientX);
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (mouseDownX === null) return;
+    const distance = mouseDownX - e.clientX;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      nextImage();
+    } else if (isRightSwipe) {
+      prevImage();
+    }
+    setMouseDownX(null);
+  };
+
+  const activeImage = imagesList[currentImageIndex]?.image_url || product.image_url;
+
   return (
     <div className="relative w-full overflow-hidden bg-background">
       {/* Product Image Banner Hero */}
-      <section className="relative h-[70vh] md:h-[85vh] w-full overflow-hidden select-none animate-fade-in">
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent z-10"></div>
+      <section 
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        className="relative h-[60vh] md:h-[75vh] w-full overflow-hidden select-none animate-fade-in cursor-grab active:cursor-grabbing"
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-black/45 z-10 pointer-events-none"></div>
         <div 
-          className="absolute inset-0 w-full h-full relative"
+          className="absolute inset-0 w-full h-full pointer-events-none"
           style={{ 
             transform: `scale(${1.02 + scrollY * 0.0001}) translateY(${scrollY * 0.15}px)` 
           }}
         >
           <Image 
-            src={product.image_url} 
+            src={activeImage} 
             alt={product.name} 
             fill
             priority
-            className="object-cover object-center brightness-[0.85]"
+            className="object-cover object-center brightness-[0.85] transition-all duration-300"
           />
         </div>
-        <div className="relative z-20 h-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex flex-col justify-end pb-12">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <div className="w-2.5 h-2.5 rounded-full bg-secondary-container status-pulse"></div>
-              <span className="font-label-caps text-xs text-secondary tracking-widest font-bold">
-                {product.type_chip || 'ELITE LEVEL PERFORMANCE'}
+
+        {/* Overlay Navigation Chevrons */}
+        {imagesList.length > 1 && (
+          <div className="absolute inset-0 flex items-center justify-between px-4 z-30 pointer-events-none">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                prevImage();
+              }}
+              className="w-12 h-12 rounded-full bg-black/40 hover:bg-black/75 border border-white/10 text-white flex items-center justify-center transition-all active:scale-90 group pointer-events-auto cursor-pointer"
+              aria-label="Previous image"
+            >
+              <span className="material-symbols-outlined font-bold text-2xl group-hover:-translate-x-0.5 transition-transform">
+                chevron_left
               </span>
-            </div>
-            <h1 className="font-display-hero text-5xl md:text-8xl uppercase italic leading-none text-primary font-black">
-              {product.name}
-            </h1>
-            <p className="font-body-lg text-base md:text-lg max-w-xl text-on-surface-variant leading-relaxed">
-              {product.description}
-            </p>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                nextImage();
+              }}
+              className="w-12 h-12 rounded-full bg-black/40 hover:bg-black/75 border border-white/10 text-white flex items-center justify-center transition-all active:scale-90 group pointer-events-auto cursor-pointer"
+              aria-label="Next image"
+            >
+              <span className="material-symbols-outlined font-bold text-2xl group-hover:translate-x-0.5 transition-transform">
+                chevron_right
+              </span>
+            </button>
           </div>
+        )}
+
+        {/* Bullet Indicator Dots */}
+        {imagesList.length > 1 && (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex gap-2 pointer-events-auto">
+            {imagesList.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentImageIndex(idx)}
+                className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
+                  currentImageIndex === idx ? 'bg-primary-container w-5' : 'bg-white/30 hover:bg-white/60'
+                }`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Floating image gallery thumbnails */}
+        {imagesList.length > 1 && (
+          <div className="absolute right-margin-mobile md:right-margin-desktop bottom-12 z-30 flex gap-2 select-none pointer-events-auto">
+            {imagesList.map((img, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentImageIndex(i)}
+                className={`relative w-16 h-16 border bg-black transition-all overflow-hidden cursor-pointer ${
+                  currentImageIndex === i
+                    ? 'border-primary-container scale-105 shadow-lg'
+                    : 'border-white/20 opacity-70 hover:opacity-100 hover:scale-102'
+                }`}
+              >
+                <Image
+                  src={img.image_url}
+                  alt={`Thumbnail ${i + 1}`}
+                  fill
+                  sizes="64px"
+                  className="object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Product Catalog Title Block */}
+      <section className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop mt-12 mb-4 animate-fade-in">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3 select-none">
+            <div className="w-2 h-2 rounded-full bg-primary-container status-pulse"></div>
+            <span className="font-label-caps text-xs text-primary-container tracking-widest font-black uppercase">
+              {product.type_chip || 'ELITE LEVEL PERFORMANCE'}
+            </span>
+          </div>
+          <h1 className="font-headline-lg text-4xl sm:text-5xl md:text-6xl uppercase italic leading-none text-primary font-black">
+            {product.name}
+          </h1>
+          <p className="font-body-md text-sm md:text-base max-w-4xl text-on-surface-variant/80 leading-relaxed mt-2">
+            {product.description}
+          </p>
         </div>
       </section>
 
@@ -165,8 +330,8 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
           <div className="flex justify-between items-baseline border-b border-white/10 pb-4">
             <div>
               <span className="font-label-caps text-[9px] text-on-surface-variant/50 block mb-1">MSRP LOCK</span>
-              <h2 className="font-headline-lg text-secondary-container text-4xl font-bold italic tracking-tighter">
-                ${msrp.toFixed(2)}
+              <h2 className="font-headline-lg text-secondary-container text-4xl font-bold italic tracking-normal">
+                RM {msrp.toFixed(2)}
               </h2>
             </div>
             <div className="text-right">
@@ -183,12 +348,12 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
               <h3 className="font-label-caps text-xs text-primary font-bold tracking-wider">
                 SELECT SIZE (US)
               </h3>
-              <button 
-                onClick={() => alert('Anatomical cleat design matches true size.')}
+              <Link 
+                href="/size-guide"
                 className="font-label-caps text-[9px] underline text-on-surface-variant/70 hover:text-white cursor-pointer"
               >
                 SIZE GUIDE
-              </button>
+              </Link>
             </div>
             
             <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
@@ -250,10 +415,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
 
         {/* Right column details folders */}
         <div className="md:col-span-7 md:pl-12 space-y-4">
-          {(PRODUCT_TECH_DETAILS[product.slug] || [
-            { title: 'Elite Performance Tech', description: 'This professional-grade cleat features premium textures, a carbon plate layout, and responsive structural mesh engineered for the modern athlete.' },
-            { title: 'Anatomical Architecture', description: 'Engineered with anatomical contours to match the shape of the foot, reducing slippage during lateral shifts and acceleration.' }
-          ]).map((detail, index) => (
+          {customDetails.map((detail, index) => (
             <details key={detail.title} className="group border-b border-white/10 pb-4" open={index === 0}>
               <summary className="flex justify-between items-center cursor-pointer list-none select-none py-2 hover:opacity-85">
                 <h3 className="font-headline-md text-xl uppercase tracking-tight text-primary leading-none">
@@ -328,7 +490,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
                   </div>
                   
                   <p className="text-secondary-container font-stats-value text-base mt-2">
-                    ${Number(kitItem.price).toFixed(2)}
+                    RM {Number(kitItem.price).toFixed(2)}
                   </p>
                 </div>
               );
@@ -338,19 +500,19 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
       </section>
 
       {/* Sticky Bottom Add To Cart Bar */}
-      <div className="fixed bottom-20 md:bottom-24 left-0 w-full z-45 px-margin-mobile flex justify-center pointer-events-none">
+      <div className="fixed bottom-20 md:bottom-6 left-0 md:left-auto md:right-6 w-full md:w-auto z-45 px-margin-mobile md:px-0 flex justify-center md:justify-end pointer-events-none animate-fade-in">
         <button 
           onClick={handleAddMainToCart}
-          className="pointer-events-auto bg-primary-container text-black h-16 w-full max-w-xl px-8 flex items-center justify-between group glow-effect hover:brightness-110 active:scale-[0.98] transition-all select-none cursor-pointer"
+          className="pointer-events-auto bg-primary-container text-black h-16 md:h-[72px] w-full md:w-80 max-w-xl px-8 flex items-center justify-between group glow-effect hover:brightness-110 active:scale-[0.98] transition-all select-none cursor-pointer"
         >
-          <span className="font-headline-md text-xl md:text-2xl uppercase font-black tracking-tighter">
-            {addedMain ? 'DEPLOYED TO LOCKER' : 'ADD TO KIT'}
+          <span className="font-headline-md text-xl md:text-base uppercase font-black tracking-tight md:tracking-normal">
+            {addedMain ? 'DEPLOYED' : 'ADD TO KIT'}
           </span>
           <div className="flex items-center gap-2">
-            <span className="font-stats-value text-lg md:text-xl font-bold">
-              ${msrp.toFixed(2)}
+            <span className="font-stats-value text-lg md:text-base font-bold">
+              RM {msrp.toFixed(2)}
             </span>
-            <span className="material-symbols-outlined group-hover:translate-x-2 transition-transform font-bold">
+            <span className="material-symbols-outlined group-hover:translate-x-1.5 transition-transform font-bold text-lg md:text-base">
               chevron_right
             </span>
           </div>

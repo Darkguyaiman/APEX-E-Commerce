@@ -30,7 +30,7 @@ export default function MenShop() {
   // Filter logic
   const filteredProducts = products.filter((p) => {
     // Avoid showing the hero product in the grid to prevent redundancy
-    if (p.slug === 'velocity-elite-neon') return false;
+    if (p.slug === 'nike-air-zoom-mercurial-vapor-15-elite-fg') return false;
 
     // Pitch filter
     if (activeFilter !== 'ALL' && p.traction_type !== activeFilter) {
@@ -39,14 +39,14 @@ export default function MenShop() {
 
     // Search query filter
     if (searchQuery) {
-      return p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-             p.colorway.toLowerCase().includes(searchQuery.toLowerCase());
+      return p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.colorway.toLowerCase().includes(searchQuery.toLowerCase());
     }
 
     return true;
   });
 
-  const heroProduct = products.find((p) => p.slug === 'velocity-elite-neon') || products[0];
+  const heroProduct = products.find((p) => p.slug === 'nike-air-zoom-mercurial-vapor-15-elite-fg') || products[0];
 
   return (
     <main className="pb-32 bg-background relative min-h-screen">
@@ -71,17 +71,17 @@ export default function MenShop() {
                 {heroProduct.type_chip || 'ELITE PERFORMANCE'}
               </span>
             </div>
-            
+
             <h1 className="font-display-hero text-5xl md:text-7xl uppercase leading-none mb-4 italic tracking-wide text-primary">
               {heroProduct.name.split(' ')[0]} {heroProduct.name.split(' ')[1]} <span className="text-primary-container">{heroProduct.name.split(' ').slice(2).join(' ')}</span>
             </h1>
-            
+
             <p className="max-w-xl font-body-lg text-base md:text-lg text-on-surface-variant leading-relaxed mb-8">
               {heroProduct.description}
             </p>
-            
+
             <div className="flex flex-wrap gap-4">
-              <button 
+              <button
                 onClick={() => addToCart(heroProduct, '10.5')}
                 className="bg-primary-container text-black px-8 py-4 font-label-caps text-sm font-bold flex items-center group transition-all active:scale-95 cursor-pointer"
               >
@@ -93,7 +93,7 @@ export default function MenShop() {
               <div className="glass-card px-6 py-4 flex flex-col justify-center border border-white/10">
                 <span className="font-label-caps text-[9px] text-on-surface-variant/50">LOCKED RATE</span>
                 <span className="font-stats-value text-stats-value text-primary-container">
-                  ${Number(heroProduct.price).toFixed(2)}
+                  RM {Number(heroProduct.price).toFixed(2)}
                 </span>
               </div>
             </div>
@@ -110,41 +110,37 @@ export default function MenShop() {
             </span>
             <button
               onClick={() => setActiveFilter('ALL')}
-              className={`px-5 py-2 border-2 transition-all font-label-caps text-xs cursor-pointer ${
-                activeFilter === 'ALL'
+              className={`px-5 py-2 border-2 transition-all font-label-caps text-xs cursor-pointer ${activeFilter === 'ALL'
                   ? 'border-primary-container bg-primary-container text-black font-bold'
                   : 'border-white/10 text-on-surface-variant hover:border-white/30'
-              }`}
+                }`}
             >
               ALL GEAR
             </button>
             <button
               onClick={() => setActiveFilter('SG')}
-              className={`px-5 py-2 border-2 transition-all font-label-caps text-xs cursor-pointer ${
-                activeFilter === 'SG'
+              className={`px-5 py-2 border-2 transition-all font-label-caps text-xs cursor-pointer ${activeFilter === 'SG'
                   ? 'border-primary-container bg-primary-container text-black font-bold'
                   : 'border-white/10 text-on-surface-variant hover:border-white/30'
-              }`}
+                }`}
             >
               SOFT GROUND
             </button>
             <button
               onClick={() => setActiveFilter('FG')}
-              className={`px-5 py-2 border-2 transition-all font-label-caps text-xs cursor-pointer ${
-                activeFilter === 'FG'
+              className={`px-5 py-2 border-2 transition-all font-label-caps text-xs cursor-pointer ${activeFilter === 'FG'
                   ? 'border-primary-container bg-primary-container text-black font-bold'
                   : 'border-white/10 text-on-surface-variant hover:border-white/30'
-              }`}
+                }`}
             >
               FIRM GROUND
             </button>
             <button
               onClick={() => setActiveFilter('TF')}
-              className={`px-5 py-2 border-2 transition-all font-label-caps text-xs cursor-pointer ${
-                activeFilter === 'TF'
+              className={`px-5 py-2 border-2 transition-all font-label-caps text-xs cursor-pointer ${activeFilter === 'TF'
                   ? 'border-primary-container bg-primary-container text-black font-bold'
                   : 'border-white/10 text-on-surface-variant hover:border-white/30'
-              }`}
+                }`}
             >
               ARTIFICIAL TURF
             </button>
@@ -207,17 +203,11 @@ export default function MenShop() {
 
           <div className="relative z-10 flex flex-col justify-center h-full max-w-xl px-8 sm:px-12 md:px-16 italic">
             <h2 className="font-display-hero text-4xl sm:text-5xl md:text-6xl uppercase mb-4 tracking-wide text-primary leading-none">
-              Carbon Core<br/><span className="text-primary-container">Integrity</span>
+              Carbon Core<br /><span className="text-primary-container">Integrity</span>
             </h2>
             <p className="font-body-lg text-sm sm:text-base text-on-surface-variant leading-relaxed mb-6">
               Our patented 12-layer carbon composite provides 40% more energy return compared to traditional TPU plates. Maximum power, minimum weight.
             </p>
-            <a 
-              className="font-label-caps text-xs text-primary border-b border-primary-container w-max pb-1 hover:text-primary-container transition-colors cursor-pointer select-none"
-              onClick={() => alert('Carbon Core design spec: 12 layered cross-woven composite fiber.')}
-            >
-              DISCOVER THE TECH
-            </a>
           </div>
 
           <div className="absolute bottom-8 right-8 hidden sm:block">

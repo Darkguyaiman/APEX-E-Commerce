@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
-import { createTestimonial, getTestimonials, TestimonialInput } from '@/lib/db';
+import { createTestimonial, getTestimonials, type TestimonialInput } from '@/lib/db';
+import { isAdminRequest } from '@/lib/adminAuth';
 
-function parseTestimonialPayload(payload: any): TestimonialInput {
+type TestimonialPayload = Record<string, unknown>;
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Internal server error';
+}
+
+function parseTestimonialPayload(payload: TestimonialPayload): TestimonialInput {
   const requiredFields = ['customer_name', 'role', 'quote', 'rating'];
 
   for (const field of requiredFields) {
@@ -27,22 +34,26 @@ export async function GET() {
   try {
     const testimonials = await getTestimonials();
     return NextResponse.json(testimonials);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Error fetching testimonials API:', e);
-    return NextResponse.json({ error: e.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: getErrorMessage(e) }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const payload = await request.json();
+    if (!isAdminRequest(request)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = await request.json() as TestimonialPayload;
     const testimonial = parseTestimonialPayload(payload);
     const createdTestimonial = await createTestimonial(testimonial);
 
     return NextResponse.json(createdTestimonial, { status: 201 });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Error creating testimonial API:', e);
-    return NextResponse.json({ error: e.message || 'Internal server error' }, { status: 400 });
+    return NextResponse.json({ error: getErrorMessage(e) }, { status: 400 });
   }
 }
 

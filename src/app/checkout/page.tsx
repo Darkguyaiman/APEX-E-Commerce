@@ -367,7 +367,7 @@ export default function CheckoutPage() {
                           </div>
                           <div className="text-right">
                             <span className="font-stats-value text-xs text-primary-container">
-                              ${(item.price * item.qty).toFixed(2)}
+                              RM {(item.price * item.qty).toFixed(2)}
                             </span>
                           </div>
                         </div>
@@ -398,7 +398,7 @@ export default function CheckoutPage() {
                     </button>
                   </div>
                   {couponVerified && (
-                    <p className="font-label-caps text-[9px] text-primary-container">ACCESS GRANTED: -$30.00 REDUCTION</p>
+                    <p className="font-label-caps text-[9px] text-primary-container">ACCESS GRANTED: -RM 30.00 REDUCTION</p>
                   )}
                   {couponError && (
                     <p className="font-label-caps text-[9px] text-secondary-container">{couponError}</p>
@@ -409,7 +409,7 @@ export default function CheckoutPage() {
                 <div className="space-y-4 pt-4 select-none">
                   <div className="flex justify-between font-label-caps text-xs text-on-surface-variant">
                     <span>SUBTOTAL</span>
-                    <span className="text-primary font-bold">${subtotal.toFixed(2)}</span>
+                    <span className="text-primary font-bold">RM {subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between font-label-caps text-xs text-on-surface-variant">
                     <span>PRIORITY SHIPPING</span>
@@ -418,12 +418,12 @@ export default function CheckoutPage() {
                   {discount > 0 && (
                     <div className="flex justify-between font-label-caps text-xs text-secondary-container">
                       <span>ACCESS CODE REDUCTION</span>
-                      <span className="font-bold">-${discount.toFixed(2)}</span>
+                      <span className="font-bold">-RM {discount.toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-label-caps text-xs text-on-surface-variant">
                     <span>TAX PROJECTION (8%)</span>
-                    <span className="text-primary font-bold">${tax.toFixed(2)}</span>
+                    <span className="text-primary font-bold">RM {tax.toFixed(2)}</span>
                   </div>
                   
                   <div className="flex justify-between items-end border-t border-white/5 pt-4 mt-2">
@@ -431,7 +431,7 @@ export default function CheckoutPage() {
                       Total Commitment
                     </span>
                     <span className="font-display-hero text-3xl text-primary-container font-black leading-none">
-                      ${finalTotal > 0 ? finalTotal.toFixed(2) : '0.00'}
+                      RM {finalTotal > 0 ? finalTotal.toFixed(2) : '0.00'}
                     </span>
                   </div>
                 </div>

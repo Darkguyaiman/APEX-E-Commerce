@@ -11,10 +11,10 @@ interface LenisProviderProps {
 export default function LenisProvider({ children }: LenisProviderProps) {
   const pathname = usePathname();
 
-  // Exclude the checkout page from the smooth scroll behavior
-  const isCheckout = pathname ? pathname.startsWith('/checkout') : false;
+  // Exclude the checkout and admin pages from the smooth scroll behavior
+  const isExcluded = pathname ? (pathname.startsWith('/checkout') || pathname.startsWith('/admin')) : false;
 
-  if (isCheckout) {
+  if (isExcluded) {
     return <>{children}</>;
   }
 

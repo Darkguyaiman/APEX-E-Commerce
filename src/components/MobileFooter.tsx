@@ -28,9 +28,9 @@ const MobileFooter: React.FC = () => {
           <span className="font-label-caps text-label-caps mt-1">HOME</span>
         </Link>
         <Link 
-          href="/shop/men" 
+          href="/shop" 
           className={`flex flex-col items-center justify-center transition-all active:scale-95 duration-100 ${
-            isTabActive(['/shop/men', '/shop/women']) ? 'text-primary-container font-bold scale-110' : 'text-on-surface-variant/60 hover:text-primary'
+            isTabActive(['/shop', '/shop/men', '/shop/women']) ? 'text-primary-container font-bold scale-110' : 'text-on-surface-variant/60 hover:text-primary'
           }`}
         >
           <span className="material-symbols-outlined">sports_soccer</span>
