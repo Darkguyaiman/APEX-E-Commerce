@@ -217,7 +217,6 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
         onMouseUp={handleMouseUp}
         className="relative h-[60vh] md:h-[75vh] w-full overflow-hidden select-none animate-fade-in cursor-grab active:cursor-grabbing"
       >
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-black/45 z-10 pointer-events-none"></div>
         <div 
           className="absolute inset-0 w-full h-full pointer-events-none"
           style={{ 
@@ -229,7 +228,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
             alt={product.name} 
             fill
             priority
-            className="object-cover object-center brightness-[0.85] transition-all duration-300"
+            className="object-cover object-center transition-all duration-300"
           />
         </div>
 
@@ -444,6 +443,44 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
         </div>
       </section>
 
+      {/* Product Videos Showcase */}
+      {product.videos && product.videos.length > 0 && (
+        <section className="mt-section-gap max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12">
+          <div className="mb-8 border-b border-white/10 pb-6">
+            <p className="font-label-caps text-xs text-primary-container tracking-widest font-black uppercase">PRODUCT SHOWCASE</p>
+            <h2 className="mt-2 font-headline-lg text-4xl uppercase italic leading-none text-primary md:text-5xl">
+              ACTION FOOTAGE & REVIEWS
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-on-surface-variant/80">
+              Watch detailed reviews, wear tests, and technology breakdowns from experts.
+            </p>
+          </div>
+
+          <div className={`grid gap-6 ${product.videos.length === 1 ? 'max-w-4xl mx-auto grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+            {product.videos.map((vid, index) => {
+              const embedUrl = getYouTubeEmbedUrl(vid.video_url);
+              if (!embedUrl) return null;
+              return (
+                <div key={index} className="flex flex-col gap-3 group">
+                  <div className="relative aspect-video w-full border border-white/10 bg-black overflow-hidden shadow-2xl">
+                    <iframe
+                      src={embedUrl}
+                      title={vid.title}
+                      className="absolute inset-0 w-full h-full border-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    ></iframe>
+                  </div>
+                  <h3 className="font-headline-md text-lg uppercase tracking-tight text-primary leading-none mt-2 group-hover:text-primary-container transition-colors">
+                    {vid.title}
+                  </h3>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Complete the kit - upsell section */}
       <section className="mt-section-gap skew-divider bg-surface-container-low py-24 relative overflow-hidden">
         <div className="absolute inset-0 carbon-pattern opacity-10 pointer-events-none"></div>
@@ -521,5 +558,29 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
     </div>
   );
 };
+
+function getYouTubeEmbedUrl(url: string): string | null {
+  if (!url) return null;
+  let videoId: string | null = null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname === 'youtu.be') {
+      videoId = parsed.pathname.substring(1);
+    } else if (parsed.hostname.includes('youtube.com')) {
+      if (parsed.pathname.includes('/embed/')) {
+        videoId = parsed.pathname.split('/embed/')[1];
+      } else {
+        videoId = parsed.searchParams.get('v');
+      }
+    }
+  } catch {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    if (match && match[2].length === 11) {
+      videoId = match[2];
+    }
+  }
+  return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+}
 
 export default ProductDetailClient;

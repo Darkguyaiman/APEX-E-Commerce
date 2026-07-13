@@ -10,17 +10,22 @@ import { useCart } from '@/context/CartContext';
 export default function ShopPage() {
   const { addToCart } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
+  const [heroProductId, setHeroProductId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('ALL'); // ALL, men, women, kit
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    // Fetch all products without category filters to show the complete catalog
-    fetch('/api/products')
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setProducts(data);
+    Promise.all([
+      fetch('/api/products').then((res) => res.json()),
+      fetch('/api/shop-hero').then((res) => res.json()).catch(() => null)
+    ])
+      .then(([productsData, heroData]) => {
+        if (Array.isArray(productsData)) {
+          setProducts(productsData);
+        }
+        if (heroData && typeof heroData.productId === 'number') {
+          setHeroProductId(heroData.productId);
         }
         setLoading(false);
       })
@@ -32,11 +37,6 @@ export default function ShopPage() {
 
   // Filter products by category and search query
   const filteredProducts = products.filter((p) => {
-    // Exclude the hero shoe from the grid to prevent double-listing if category is ALL or men
-    if (p.slug === 'nike-air-zoom-mercurial-vapor-15-elite-fg' && activeCategory === 'ALL') {
-      return false;
-    }
-
     // Category filter
     if (activeCategory !== 'ALL' && p.category !== activeCategory) {
       return false;
@@ -54,7 +54,7 @@ export default function ShopPage() {
     return true;
   });
 
-  const heroProduct = products.find((p) => p.slug === 'nike-air-zoom-mercurial-vapor-15-elite-fg') || products[0];
+  const heroProduct = products.find((p) => p.id === heroProductId) || products[0];
 
   return (
     <main className="pb-32 bg-background relative min-h-screen">
@@ -62,17 +62,18 @@ export default function ShopPage() {
       <div className="absolute inset-0 carbon-pattern opacity-5 pointer-events-none"></div>
 
       {/* Featured Banner (only displayed when category is ALL or men) */}
-      {heroProduct && (activeCategory === 'ALL' || activeCategory === 'men') && (
+      {heroProduct && (activeCategory === 'ALL' || heroProduct.category === activeCategory) && (
         <section className="relative w-full min-h-[60vh] flex items-end overflow-hidden mb-16 select-none animate-fade-in border-b border-white/5">
           <div className="absolute inset-0 z-0">
             <Image
-              src="/images/collection-speedlab.jpg"
+              src={heroProduct.image_url}
               alt={heroProduct.name}
               fill
               priority
-              className="object-cover object-center scale-[1.01]"
+              sizes="100vw"
+              className="object-cover object-center"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/20"></div>
             <div className="absolute inset-0 bg-black/35"></div>
           </div>
 

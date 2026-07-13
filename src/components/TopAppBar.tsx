@@ -44,7 +44,14 @@ const TopAppBar: React.FC = () => {
             }`}
           href="/shop"
         >
-          SHOP ALL
+          SHOP
+        </Link>
+        <Link
+          className={`font-label-caps text-label-caps tracking-widest transition-all ${isActive('/about') ? 'text-primary border-b border-primary-container pb-1' : 'text-on-surface-variant hover:text-primary'
+            }`}
+          href="/about"
+        >
+          ABOUT
         </Link>
         <Link
           className={`font-label-caps text-label-caps tracking-widest transition-all ${isActive('/membership') ? 'text-primary border-b border-primary-container pb-1' : 'text-on-surface-variant hover:text-primary'

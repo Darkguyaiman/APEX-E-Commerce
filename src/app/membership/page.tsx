@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const fieldClass = 'w-full bg-surface-container border border-white/10 px-4 py-3 text-sm text-primary placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none transition-colors';
 const labelClass = 'font-label-caps text-[10px] text-on-surface-variant tracking-widest uppercase';
@@ -16,6 +17,31 @@ export default function MembershipPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [memberId, setMemberId] = useState('');
+  const memberCardRef = useRef<HTMLDivElement>(null);
+
+  const handleCardMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!memberCardRef.current || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    const rotateY = (x - 0.5) * 14;
+    const rotateX = (0.5 - y) * 14;
+
+    memberCardRef.current.style.transformOrigin = `${Math.round(x * 100)}% ${Math.round(y * 100)}%`;
+    memberCardRef.current.style.transform = `rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale(1.045)`;
+  };
+
+  const resetCardMove = () => {
+    if (!memberCardRef.current) {
+      return;
+    }
+
+    memberCardRef.current.style.transformOrigin = 'center center';
+    memberCardRef.current.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +87,65 @@ export default function MembershipPage() {
             <h2 className="font-headline-md text-3xl uppercase italic leading-none mb-2">
               MEMBERSHIP PRIVILEGES
             </h2>
+
+            <a
+              href="#membership-application"
+              className="hover-3d mt-3 block w-full max-w-[24rem] cursor-pointer select-none"
+              aria-label="Preview Apex Club member credential"
+              onMouseMove={handleCardMove}
+              onMouseLeave={resetCardMove}
+            >
+              <div
+                ref={memberCardRef}
+                className="member-card-example relative overflow-hidden bg-black text-white border border-white/10"
+              >
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,#ffffff08_35%,transparent_36%),radial-gradient(circle_at_top_right,#ffffff08_35%,transparent_36%)] bg-[length:4.95em_4.95em]"></div>
+                <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-primary-container/20 blur-3xl"></div>
+                <div className="relative p-6 sm:p-7">
+                  <div className="mb-10 flex items-start justify-between gap-4">
+                    <div>
+                      <div className="font-label-caps text-[10px] uppercase tracking-widest text-primary-container">
+                        Apex Club
+                      </div>
+                      <div className="font-headline-md text-2xl uppercase italic leading-none">
+                        Member Credential
+                      </div>
+                    </div>
+                    <Image
+                      src="/apex-logo.png"
+                      alt="Apex"
+                      width={72}
+                      height={72}
+                      className="h-14 w-14 object-contain opacity-25"
+                    />
+                  </div>
+
+                  <div className="mb-5 font-mono text-base tracking-[0.22em] text-white/45">
+                    0210 8820 1150 0222
+                  </div>
+
+                  <div className="flex items-end justify-between gap-6">
+                    <div>
+                      <div className="font-label-caps text-[9px] uppercase tracking-widest text-white/25">
+                        Card Holder
+                      </div>
+                      <div className="font-label-caps text-xs uppercase tracking-widest">
+                        Apex Athlete
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-label-caps text-[9px] uppercase tracking-widest text-white/25">
+                        Expires
+                      </div>
+                      <div className="font-label-caps text-xs uppercase tracking-widest">
+                        29/08
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </a>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Perk 1 */}
@@ -135,7 +220,7 @@ export default function MembershipPage() {
           </div>
 
           {/* Form - Right Column (5/12) */}
-          <div className="lg:col-span-5">
+          <div id="membership-application" className="lg:col-span-5 scroll-mt-28">
             <div className="glass-card p-6 md:p-8 border border-white/10 bg-surface-container-low shadow-2xl relative overflow-hidden h-full flex flex-col justify-between">
               
               {!submitted ? (

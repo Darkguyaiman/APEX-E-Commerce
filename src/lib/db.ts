@@ -11,6 +11,13 @@ export interface ProductImage {
   is_main: boolean;
 }
 
+export interface ProductVideo {
+  id?: number;
+  product_id?: number;
+  title: string;
+  video_url: string;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -27,6 +34,7 @@ export interface Product {
   tags: string | null;
   images?: ProductImage[];
   faqs?: string | null;
+  videos?: ProductVideo[];
 }
 
 export interface ProductInput {
@@ -44,6 +52,7 @@ export interface ProductInput {
   tags: string | null;
   images?: ProductImage[];
   faqs?: string | null;
+  videos?: ProductVideo[];
 }
 
 export interface Testimonial {
@@ -337,6 +346,8 @@ const poolConfig = {
 
 const productsFallbackPath = path.join(process.cwd(), '.products_fallback.json');
 const testimonialsFallbackPath = path.join(process.cwd(), '.testimonials_fallback.json');
+const settingsFallbackPath = path.join(process.cwd(), '.settings_fallback.json');
+const SHOP_HERO_PRODUCT_ID_KEY = 'shop_hero_product_id';
 
 const STATIC_TESTIMONIALS: Testimonial[] = [
   {
@@ -376,7 +387,7 @@ function readJsonFile<T>(filePath: string, fallback: T): T {
   if (!fs.existsSync(filePath)) return fallback;
   try {
     return JSON.parse(fs.readFileSync(filePath, 'utf8')) as T;
-  } catch (err) {
+  } catch {
     return fallback;
   }
 }
@@ -399,6 +410,16 @@ function readFallbackTestimonials(): Testimonial[] {
 
 function writeFallbackTestimonials(testimonials: Testimonial[]) {
   writeJsonFile(testimonialsFallbackPath, testimonials);
+}
+
+function readFallbackSettings(): Record<string, string> {
+  return readJsonFile<Record<string, string>>(settingsFallbackPath, {
+    [SHOP_HERO_PRODUCT_ID_KEY]: '1'
+  });
+}
+
+function writeFallbackSettings(settings: Record<string, string>) {
+  writeJsonFile(settingsFallbackPath, settings);
 }
 
 function nextLocalId(items: Array<{ id: number }>) {
@@ -468,21 +489,84 @@ export async function getProducts(category?: string): Promise<Product[]> {
   }
 }
 
+async function ensureSettingsTable() {
+  await rawQuery(
+    `CREATE TABLE IF NOT EXISTS site_settings (
+      setting_key VARCHAR(100) PRIMARY KEY,
+      setting_value TEXT NOT NULL,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
+  );
+}
+
+export async function getShopHeroProductId(): Promise<number | null> {
+  try {
+    if (isMockDb) throw new Error('Local fallback triggered');
+    await ensureSettingsTable();
+
+    const rows = await rawQuery<Array<{ setting_value: string }>>(
+      'SELECT setting_value FROM site_settings WHERE setting_key = ? LIMIT 1',
+      [SHOP_HERO_PRODUCT_ID_KEY]
+    );
+    const productId = Number(rows[0]?.setting_value);
+    return Number.isInteger(productId) && productId > 0 ? productId : null;
+  } catch {
+    const productId = Number(readFallbackSettings()[SHOP_HERO_PRODUCT_ID_KEY]);
+    return Number.isInteger(productId) && productId > 0 ? productId : 1;
+  }
+}
+
+export async function setShopHeroProductId(productId: number): Promise<number> {
+  const product = await getProductById(productId);
+  if (!product) {
+    throw new Error('Product not found.');
+  }
+
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureSettingsTable();
+
+    await rawQuery(
+      `INSERT INTO site_settings (setting_key, setting_value)
+       VALUES (?, ?)
+       ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)`,
+      [SHOP_HERO_PRODUCT_ID_KEY, String(productId)]
+    );
+  } catch {
+    writeFallbackSettings({
+      ...readFallbackSettings(),
+      [SHOP_HERO_PRODUCT_ID_KEY]: String(productId)
+    });
+  }
+
+  return productId;
+}
+
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
     if (isMockDb) throw new Error('Local fallback triggered');
     const rows = await rawQuery<Product[]>('SELECT * FROM products WHERE slug = ?', [slug]);
     if (rows.length > 0) {
       const product = rows[0];
-      const images = await rawQuery<ProductImage[]>('SELECT * FROM product_images WHERE product_id = ?', [product.id]);
+      const [images, videos] = await Promise.all([
+        rawQuery<ProductImage[]>('SELECT * FROM product_images WHERE product_id = ?', [product.id]),
+        rawQuery<ProductVideo[]>('SELECT * FROM product_videos WHERE product_id = ?', [product.id])
+      ]);
       product.images = images;
+      product.videos = videos;
       return product;
     }
     return null;
   } catch {
     const product = readFallbackProducts().find(p => p.slug === slug) || null;
-    if (product && !product.images) {
-      product.images = [{ image_url: product.image_url, is_main: true }];
+    if (product) {
+      if (!product.images) {
+        product.images = [{ image_url: product.image_url, is_main: true }];
+      }
+      if (!product.videos) {
+        product.videos = [];
+      }
     }
     return product;
   }
@@ -494,15 +578,24 @@ export async function getProductById(id: number): Promise<Product | null> {
     const rows = await rawQuery<Product[]>('SELECT * FROM products WHERE id = ?', [id]);
     if (rows.length > 0) {
       const product = rows[0];
-      const images = await rawQuery<ProductImage[]>('SELECT * FROM product_images WHERE product_id = ?', [product.id]);
+      const [images, videos] = await Promise.all([
+        rawQuery<ProductImage[]>('SELECT * FROM product_images WHERE product_id = ?', [product.id]),
+        rawQuery<ProductVideo[]>('SELECT * FROM product_videos WHERE product_id = ?', [product.id])
+      ]);
       product.images = images;
+      product.videos = videos;
       return product;
     }
     return null;
   } catch {
     const product = readFallbackProducts().find(p => p.id === id) || null;
-    if (product && !product.images) {
-      product.images = [{ image_url: product.image_url, is_main: true }];
+    if (product) {
+      if (!product.images) {
+        product.images = [{ image_url: product.image_url, is_main: true }];
+      }
+      if (!product.videos) {
+        product.videos = [];
+      }
     }
     return product;
   }
@@ -558,9 +651,23 @@ export async function createProduct(product: ProductInput): Promise<Product> {
       );
     }
 
+    // Save product videos
+    if (product.videos && product.videos.length > 0) {
+      for (const vid of product.videos) {
+        await rawQuery(
+          'INSERT INTO product_videos (product_id, title, video_url) VALUES (?, ?, ?)',
+          [newProductId, vid.title, vid.video_url]
+        );
+      }
+    }
+
     const createdProduct = { ...product, id: newProductId, image_url: mainImageUrl };
-    const images = await rawQuery<ProductImage[]>('SELECT * FROM product_images WHERE product_id = ?', [newProductId]);
+    const [images, videos] = await Promise.all([
+      rawQuery<ProductImage[]>('SELECT * FROM product_images WHERE product_id = ?', [newProductId]),
+      rawQuery<ProductVideo[]>('SELECT * FROM product_videos WHERE product_id = ?', [newProductId])
+    ]);
     createdProduct.images = images;
+    createdProduct.videos = videos;
     return createdProduct;
   } catch {
     const products = readFallbackProducts();
@@ -581,7 +688,8 @@ export async function createProduct(product: ProductInput): Promise<Product> {
       id: nextLocalId(products), 
       ...product, 
       image_url: mainImageUrl,
-      images: imagesList 
+      images: imagesList,
+      videos: product.videos || []
     };
     writeFallbackProducts([...products, createdProduct]);
     return createdProduct;
@@ -640,9 +748,24 @@ export async function updateProduct(id: number, product: ProductInput): Promise<
       );
     }
 
+    // Update product videos
+    await rawQuery('DELETE FROM product_videos WHERE product_id = ?', [id]);
+    if (product.videos && product.videos.length > 0) {
+      for (const vid of product.videos) {
+        await rawQuery(
+          'INSERT INTO product_videos (product_id, title, video_url) VALUES (?, ?, ?)',
+          [id, vid.title, vid.video_url]
+        );
+      }
+    }
+
     const updatedProduct = { ...product, id, image_url: mainImageUrl };
-    const images = await rawQuery<ProductImage[]>('SELECT * FROM product_images WHERE product_id = ?', [id]);
+    const [images, videos] = await Promise.all([
+      rawQuery<ProductImage[]>('SELECT * FROM product_images WHERE product_id = ?', [id]),
+      rawQuery<ProductVideo[]>('SELECT * FROM product_videos WHERE product_id = ?', [id])
+    ]);
     updatedProduct.images = images;
+    updatedProduct.videos = videos;
     return updatedProduct;
   } catch {
     const products = readFallbackProducts();
@@ -667,7 +790,8 @@ export async function updateProduct(id: number, product: ProductInput): Promise<
       id, 
       ...product, 
       image_url: mainImageUrl,
-      images: imagesList 
+      images: imagesList,
+      videos: product.videos || []
     };
     const nextProducts = [...products];
     nextProducts[productIndex] = updatedProduct;

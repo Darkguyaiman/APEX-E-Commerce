@@ -1,8 +1,11 @@
 import ProductListTable from '@/components/ProductListTable';
-import { getProducts } from '@/lib/db';
+import { getProducts, getShopHeroProductId } from '@/lib/db';
 
 export default async function AdminProductsPage() {
-  const products = await getProducts();
+  const [products, shopHeroProductId] = await Promise.all([
+    getProducts(),
+    getShopHeroProductId()
+  ]);
 
   return (
     <div className="px-margin-mobile py-10 md:px-10">
@@ -12,10 +15,10 @@ export default async function AdminProductsPage() {
           Product Manager
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-on-surface-variant">
-          Add new catalog items and edit boot, kit, pricing, image, and spec data.
+          Add catalog items, edit product specs, and choose the product featured in the shop hero.
         </p>
       </div>
-      <ProductListTable initialProducts={products} />
+      <ProductListTable initialProducts={products} initialShopHeroProductId={shopHeroProductId} />
     </div>
   );
 }

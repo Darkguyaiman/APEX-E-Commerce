@@ -229,6 +229,31 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* 3D membership credential preview */
+.hover-3d {
+  position: relative;
+  transform-style: preserve-3d;
+  perspective: 900px;
+}
+
+.member-card-example {
+  border-radius: 8px;
+  transform: rotateX(0deg) rotateY(0deg);
+  transform-style: preserve-3d;
+  transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms ease;
+  will-change: transform;
+}
+
+.hover-3d:hover .member-card-example {
+  border-color: rgba(195, 244, 0, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .member-card-example {
+    transition: none;
+  }
+}
+
 /* Performance Halos and Glows */
 .electric-glow {
   box-shadow: 0 0 40px -10px rgba(195, 244, 0, 0.2);
@@ -389,5 +414,3 @@ input:focus {
   mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
   -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
 }
-
-

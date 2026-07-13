@@ -46,6 +46,13 @@ function parseProductPayload(payload: ProductPayload): ProductInput {
       }))
     : undefined;
 
+  const videos = Array.isArray(payload.videos)
+    ? payload.videos.map((vid: any) => ({
+        title: String(vid.title).trim(),
+        video_url: String(vid.video_url).trim()
+      }))
+    : undefined;
+
   return {
     name: String(payload.name).trim(),
     slug: String(payload.slug).trim().toLowerCase(),
@@ -60,7 +67,8 @@ function parseProductPayload(payload: ProductPayload): ProductInput {
     type_chip: payload.type_chip ? String(payload.type_chip).trim() : null,
     tags: payload.tags ? String(payload.tags).trim() : null,
     images,
-    faqs: payload.faqs ? String(payload.faqs).trim() : null
+    faqs: payload.faqs ? String(payload.faqs).trim() : null,
+    videos
   };
 }
 

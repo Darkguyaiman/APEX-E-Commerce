@@ -7,6 +7,8 @@ DROP TABLE IF EXISTS order_items;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS testimonials;
 DROP TABLE IF EXISTS product_images;
+DROP TABLE IF EXISTS product_videos;
+DROP TABLE IF EXISTS site_settings;
 DROP TABLE IF EXISTS products;
 
 -- 1. Create Products Table
@@ -34,6 +36,23 @@ CREATE TABLE product_images (
     image_url VARCHAR(255) NOT NULL,
     is_main BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 1.6. Create Product Videos Table
+CREATE TABLE product_videos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    video_url VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 1.7. Create Site Settings Table
+CREATE TABLE site_settings (
+    setting_key VARCHAR(100) PRIMARY KEY,
+    setting_value TEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 2. Create Testimonials Table
@@ -120,3 +139,12 @@ INSERT INTO product_images (product_id, image_url, is_main) VALUES
 (14, '/images/product/kit-socks.jpg', TRUE),
 (15, '/images/product/kit-duffel.jpg', TRUE),
 (16, '/images/product/kit-top.jpg', TRUE);
+
+-- 8. Seed Product Videos Data
+INSERT INTO product_videos (product_id, title, video_url) VALUES
+(1, 'Nike Mercurial Vapor 15 Elite Cleat Review', 'https://www.youtube.com/watch?v=y3zVbKew998'),
+(2, 'Adidas Predator Elite Fold-Over Tongue Review', 'https://www.youtube.com/watch?v=7zVp7kpe66g');
+
+-- 9. Seed Site Settings
+INSERT INTO site_settings (setting_key, setting_value) VALUES
+('shop_hero_product_id', '1');

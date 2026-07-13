@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Product, ProductImage } from '@/lib/db';
+import { Product, ProductImage, ProductVideo } from '@/lib/db';
 
 type ProductFormState = {
   id?: number;
@@ -104,6 +104,26 @@ export default function ProductForm({ initialProduct }: ProductFormProps) {
 
   const handleRemoveFaq = (index: number) => {
     setFaqs(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  const [videos, setVideos] = useState<ProductVideo[]>(
+    initialProduct?.videos || []
+  );
+
+  const handleAddVideo = () => {
+    setVideos(prev => [...prev, { title: '', video_url: '' }]);
+  };
+
+  const handleVideoChange = (index: number, key: 'title' | 'video_url', value: string) => {
+    setVideos(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [key]: value };
+      return updated;
+    });
+  };
+
+  const handleRemoveVideo = (index: number) => {
+    setVideos(prev => prev.filter((_, i) => i !== index));
   };
   
   const [productStatus, setProductStatus] = useState('');
@@ -267,7 +287,8 @@ export default function ProductForm({ initialProduct }: ProductFormProps) {
           price: Number(productForm.price),
           original_price: productForm.original_price ? Number(productForm.original_price) : null,
           images: finalImages,
-          faqs: JSON.stringify(faqs)
+          faqs: JSON.stringify(faqs),
+          videos: videos
         })
       });
       const data = await response.json();
@@ -498,6 +519,71 @@ export default function ProductForm({ initialProduct }: ProductFormProps) {
                       required
                     />
                   </label>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Product Videos Editor */}
+        <div className="space-y-4 md:col-span-2 border-t border-white/10 pt-6 mt-4">
+          <div className="flex items-center justify-between">
+            <span className={labelClass}>Product Showcase Videos (Optional YouTube Links)</span>
+            <button
+              type="button"
+              onClick={handleAddVideo}
+              className="inline-flex items-center gap-1.5 border border-primary-container px-3 py-1.5 font-label-caps text-[10px] text-primary-container hover:bg-primary-container/10 transition-colors cursor-pointer select-none"
+            >
+              <span className="material-symbols-outlined text-sm font-bold">add</span>
+              ADD VIDEO
+            </button>
+          </div>
+
+          {videos.length === 0 ? (
+            <p className="text-xs text-on-surface-variant/60 font-body-md py-4 text-center border border-dashed border-white/10">
+              No product videos configured. Add video links to showcase review/action footage.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {videos.map((vid, index) => (
+                <div key={index} className="border border-white/10 bg-surface-container/20 p-4 space-y-4 relative">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="font-label-caps text-[10px] text-primary-container font-black">VIDEO #{index + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveVideo(index)}
+                      className="text-on-surface-variant hover:text-secondary-container transition-colors flex items-center justify-center p-1 border border-white/10 hover:border-secondary-container cursor-pointer"
+                      title="Remove video"
+                    >
+                      <span className="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="space-y-1.5 block">
+                      <span className="font-label-caps text-[9px] text-on-surface-variant/70 uppercase">Video Title</span>
+                      <input
+                        type="text"
+                        className={fieldClass}
+                        value={vid.title}
+                        onChange={(e) => handleVideoChange(index, 'title', e.target.value)}
+                        placeholder="e.g. Nike Vapor 15 On-Feet Review"
+                        required
+                      />
+                    </label>
+                    
+                    <label className="space-y-1.5 block">
+                      <span className="font-label-caps text-[9px] text-on-surface-variant/70 uppercase">YouTube Link / URL</span>
+                      <input
+                        type="url"
+                        className={fieldClass}
+                        value={vid.video_url}
+                        onChange={(e) => handleVideoChange(index, 'video_url', e.target.value)}
+                        placeholder="e.g. https://www.youtube.com/watch?v=..."
+                        required
+                      />
+                    </label>
+                  </div>
                 </div>
               ))}
             </div>

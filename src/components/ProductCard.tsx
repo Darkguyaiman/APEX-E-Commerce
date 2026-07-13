@@ -26,11 +26,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       className="glass-card group relative flex flex-col overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:electric-glow h-full min-h-[460px]"
       onMouseLeave={() => setShowSizes(false)}
     >
+      <Link
+        href={`/product/${product.slug}`}
+        className="absolute inset-0 z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-container focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        aria-label={`View ${product.name}`}
+      />
       <div className="absolute inset-0 carbon-pattern opacity-10 pointer-events-none"></div>
 
       {/* Product Image Area */}
       <div className="relative h-80 overflow-hidden bg-surface-container-low p-8 flex items-center justify-center select-none">
-        <Link href={`/product/${product.slug}`} className="w-full h-full relative block">
+        <div className="w-full h-full relative block pointer-events-none">
           <Image
             src={product.image_url}
             alt={product.name}
@@ -39,7 +44,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             className="object-contain transition-transform duration-500 group-hover:scale-105"
             priority
           />
-        </Link>
+        </div>
 
         {/* Dynamic Category Badge */}
         {product.type_chip && (
@@ -63,7 +68,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 <button
                   key={size}
                   onClick={() => handleSelectSize(size)}
-                  className="h-10 border border-white/10 font-label-caps text-xs text-primary hover:bg-primary-container hover:text-black transition-colors cursor-pointer"
+                  className="relative z-30 h-10 border border-white/10 font-label-caps text-xs text-primary hover:bg-primary-container hover:text-black transition-colors cursor-pointer"
                 >
                   US {size}
                 </button>
@@ -71,7 +76,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </div>
             <button
               onClick={() => setShowSizes(false)}
-              className="mt-4 font-label-caps text-[10px] text-on-surface-variant underline hover:text-white cursor-pointer"
+              className="relative z-30 mt-4 font-label-caps text-[10px] text-on-surface-variant underline hover:text-white cursor-pointer"
             >
               CANCEL
             </button>
@@ -79,7 +84,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         ) : (
           <button
             onClick={() => setShowSizes(true)}
-            className="absolute bottom-4 right-4 bg-primary-container w-10 h-10 flex items-center justify-center text-on-background active:scale-90 hover:brightness-110 transition-all cursor-pointer z-10"
+            className="absolute bottom-4 right-4 bg-primary-container w-10 h-10 flex items-center justify-center text-on-background active:scale-90 hover:brightness-110 transition-all cursor-pointer z-30"
             title="Add cleat to cart"
           >
             <span className="material-symbols-outlined text-black font-bold">add</span>
@@ -91,11 +96,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       <div className="p-6 flex-1 flex flex-col justify-between relative bg-surface-container-low/20">
         <div>
           <div className="flex justify-between items-start mb-2 gap-4">
-            <Link href={`/product/${product.slug}`} className="hover:text-primary-container transition-colors">
+            <div className="transition-colors group-hover:text-primary-container">
               <h3 className="font-headline-md text-xl uppercase italic tracking-tight leading-none">
                 {product.name}
               </h3>
-            </Link>
+            </div>
             <div className="flex flex-col items-end">
               <span className="font-stats-value text-stats-value text-primary-container leading-none">
                 RM {Number(product.price).toFixed(2).replace(/\.00$/, '')}

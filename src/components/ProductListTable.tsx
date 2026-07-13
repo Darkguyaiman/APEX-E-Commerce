@@ -6,14 +6,18 @@ import { Product } from '@/lib/db';
 
 interface ProductListTableProps {
   initialProducts: Product[];
+  initialShopHeroProductId: number | null;
 }
 
 const fieldClass = 'w-full bg-surface-container border border-white/10 px-4 py-3 text-sm text-primary placeholder:text-on-surface-variant/70 focus:border-primary-container';
 
-export default function ProductListTable({ initialProducts }: ProductListTableProps) {
+export default function ProductListTable({ initialProducts, initialShopHeroProductId }: ProductListTableProps) {
   const [products, setProducts] = useState(initialProducts);
   const [query, setQuery] = useState('');
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [shopHeroProductId, setShopHeroProductId] = useState(initialShopHeroProductId);
+  const [settingHeroId, setSettingHeroId] = useState<number | null>(null);
+  const [heroStatus, setHeroStatus] = useState('');
 
   const handleDeleteProduct = async (id: number, name: string) => {
     if (!confirm(`Are you absolutely sure you want to delete "${name}"? This action cannot be undone.`)) {
@@ -32,10 +36,35 @@ export default function ProductListTable({ initialProducts }: ProductListTablePr
       }
 
       setProducts(prev => prev.filter(p => p.id !== id));
-    } catch (err: any) {
-      alert(err.message || 'Could not delete product');
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Could not delete product');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleSetShopHero = async (product: Product) => {
+    setSettingHeroId(product.id);
+    setHeroStatus('');
+
+    try {
+      const response = await fetch('/api/shop-hero', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product.id })
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Could not update shop hero');
+      }
+
+      setShopHeroProductId(product.id);
+      setHeroStatus(`${product.name} is now the shop hero.`);
+    } catch (err: unknown) {
+      setHeroStatus(err instanceof Error ? err.message : 'Could not update shop hero.');
+    } finally {
+      setSettingHeroId(null);
     }
   };
 
@@ -77,11 +106,24 @@ export default function ProductListTable({ initialProducts }: ProductListTablePr
         </Link>
       </div>
 
+      <div className="border border-white/10 bg-surface-container-low px-4 py-3">
+        <p className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">
+          Shop hero product
+        </p>
+        <p className="mt-1 text-sm text-primary">
+          {products.find((product) => product.id === shopHeroProductId)?.name || 'No hero product selected.'}
+        </p>
+        {heroStatus && (
+          <p className="mt-1 text-xs text-on-surface-variant">{heroStatus}</p>
+        )}
+      </div>
+
       <div className="overflow-x-auto border border-white/10 bg-surface-container-low">
         <table className="w-full border-collapse text-left text-sm text-on-surface">
           <thead>
             <tr className="border-b border-white/10 bg-surface-container-lowest font-label-caps text-[10px] text-on-surface-variant tracking-wider uppercase">
               <th className="px-6 py-4">Product</th>
+              <th className="px-6 py-4">Hero</th>
               <th className="px-6 py-4">Category</th>
               <th className="px-6 py-4">Traction</th>
               <th className="px-6 py-4">Weight</th>
@@ -92,7 +134,7 @@ export default function ProductListTable({ initialProducts }: ProductListTablePr
           <tbody className="divide-y divide-white/5">
             {filteredProducts.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-10 text-center text-on-surface-variant">
+                <td colSpan={7} className="px-6 py-10 text-center text-on-surface-variant">
                   No products found.
                 </td>
               </tr>
@@ -106,6 +148,26 @@ export default function ProductListTable({ initialProducts }: ProductListTablePr
                     <span className="mt-1 block text-xs text-on-surface-variant font-medium">
                       {product.colorway}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    {shopHeroProductId === product.id ? (
+                      <span className="inline-flex items-center gap-1.5 bg-primary-container px-2.5 py-1 font-label-caps text-[10px] font-bold uppercase text-black">
+                        <span className="material-symbols-outlined text-sm">bolt</span>
+                        Active
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={settingHeroId === product.id}
+                        onClick={() => handleSetShopHero(product)}
+                        className="inline-flex items-center gap-1.5 border border-white/15 px-2.5 py-1 font-label-caps text-[10px] uppercase text-on-surface-variant transition-colors hover:border-primary-container hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <span className="material-symbols-outlined text-sm">
+                          {settingHeroId === product.id ? 'sync' : 'bolt'}
+                        </span>
+                        {settingHeroId === product.id ? 'Setting' : 'Set hero'}
+                      </button>
+                    )}
                   </td>
                   <td className="px-6 py-4 font-label-caps text-[11px] text-on-surface-variant">
                     {product.category}
