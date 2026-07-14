@@ -5,11 +5,24 @@ USE apex_pitch;
 -- Drop tables if they exist (for easy re-seeding)
 DROP TABLE IF EXISTS order_items;
 DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS email_verification_tokens;
+DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS contact_messages;
 DROP TABLE IF EXISTS testimonials;
 DROP TABLE IF EXISTS product_images;
 DROP TABLE IF EXISTS product_videos;
 DROP TABLE IF EXISTS site_settings;
 DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS membership_applications;
+DROP TABLE IF EXISTS promo_codes;
+
+-- 0. Create Categories Table
+CREATE TABLE categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 1. Create Products Table
 CREATE TABLE products (
@@ -66,8 +79,29 @@ CREATE TABLE testimonials (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 3. Create Orders Table
+CREATE TABLE customers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NULL,
+    google_id VARCHAR(255) NULL UNIQUE,
+    provider VARCHAR(50) NOT NULL,
+    email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE email_verification_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NULL,
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
     address VARCHAR(255) NOT NULL,
@@ -79,7 +113,8 @@ CREATE TABLE orders (
     tax DECIMAL(10, 2) NOT NULL,
     total DECIMAL(10, 2) NOT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'confirmed',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 4. Create Order Items Table
@@ -92,6 +127,17 @@ CREATE TABLE order_items (
     price DECIMAL(10, 2) NOT NULL,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 5. Create Contact Messages Table
+CREATE TABLE contact_messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -- 5. Seed Products Data
@@ -148,3 +194,44 @@ INSERT INTO product_videos (product_id, title, video_url) VALUES
 -- 9. Seed Site Settings
 INSERT INTO site_settings (setting_key, setting_value) VALUES
 ('shop_hero_product_id', '1');
+
+-- 10. Seed Categories Data
+INSERT INTO categories (name, slug) VALUES 
+('Men', 'men'),
+('Women', 'women'),
+('Kit', 'kit');
+
+-- 11. Create Membership Applications Table
+CREATE TABLE membership_applications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    size VARCHAR(50) NOT NULL,
+    position VARCHAR(100) NOT NULL,
+    member_id VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 12. Seed Membership Applications Data
+INSERT INTO membership_applications (name, email, size, position, member_id) VALUES
+('Marcus Alisson', 'marcus@pitch.com', '10.5', 'Midfielder', 'APX-9821'),
+('Sarah Jenkins', 'sarah.j@apex.com', '8.5', 'Forward', 'APX-4102'),
+('Kenji Sato', 'sato@football.jp', '9.5', 'Defender', 'APX-1289');
+
+-- 13. Create Promo Codes Table
+CREATE TABLE promo_codes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(100) NOT NULL UNIQUE,
+    type VARCHAR(50) NOT NULL, -- 'percent', 'fixed', 'free_item'
+    value DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    min_spend DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    applies_to VARCHAR(50) NOT NULL DEFAULT 'all', -- 'all', 'specific'
+    product_ids VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 14. Seed Promo Codes Data
+INSERT INTO promo_codes (code, type, value, min_spend, applies_to, product_ids) VALUES
+('APEX20', 'percent', 20.00, 0.00, 'all', NULL),
+('RM50OVER300', 'fixed', 50.00, 300.00, 'all', NULL),
+('FREEBALL', 'free_item', 0.00, 500.00, 'all', '12');

@@ -126,7 +126,7 @@ export default function WomenShop() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6 select-none">
             <div>
               <h2 className="font-headline-lg text-3xl md:text-headline-lg uppercase italic mb-2 leading-none text-primary">
-                APEX PITCH <span className="text-neon-crimson">COLLECTION</span>
+                APEX <span className="text-neon-crimson">COLLECTION</span>
               </h2>
               <p className="font-body-md text-sm md:text-base text-on-surface-variant/70">
                 Specialized performance cleats optimized for her game.

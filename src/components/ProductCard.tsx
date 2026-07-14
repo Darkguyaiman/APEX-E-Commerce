@@ -95,13 +95,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       {/* Info Description */}
       <div className="p-6 flex-1 flex flex-col justify-between relative bg-surface-container-low/20">
         <div>
-          <div className="flex justify-between items-start mb-2 gap-4">
+          <div className="mb-3">
             <div className="transition-colors group-hover:text-primary-container">
               <h3 className="font-headline-md text-xl uppercase italic tracking-tight leading-none">
                 {product.name}
               </h3>
             </div>
-            <div className="flex flex-col items-end">
+          </div>
+          <div className="flex justify-between items-baseline mb-4 gap-4">
+            <p className="font-label-caps text-[10px] text-on-surface-variant/70 uppercase truncate">
+              {product.traction_type} / {product.colorway}
+            </p>
+            <div className="flex flex-col items-end shrink-0">
               <span className="font-stats-value text-stats-value text-primary-container leading-none">
                 RM {Number(product.price).toFixed(2).replace(/\.00$/, '')}
               </span>
@@ -112,9 +117,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               )}
             </div>
           </div>
-          <p className="font-label-caps text-[10px] text-on-surface-variant/70 mb-4 uppercase">
-            {product.traction_type} / {product.colorway}
-          </p>
         </div>
 
         {/* Feature Tags list */}

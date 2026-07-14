@@ -6,7 +6,7 @@ import LenisProvider from '@/components/LenisProvider';
 import LayoutContent from '@/components/LayoutContent';
 
 export const metadata: Metadata = {
-  title: 'Apex Pitch | Elite Football Gear',
+  title: 'Apex | Elite Football Gear',
   description: 'Building the future of athletic performance through precision engineering and data-driven design. Engineered for the elite.',
   icons: {
     icon: [

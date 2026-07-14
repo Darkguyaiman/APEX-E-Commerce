@@ -12,7 +12,7 @@ export async function loginAdmin(_state: LoginState, formData: FormData): Promis
   const password = String(formData.get('password') || '');
 
   if (!username || !password) {
-    return { error: 'Enter your admin username and password.' };
+    return { error: 'Enter your admin username (or email) and password.' };
   }
 
   if (!validateAdminCredentials(username, password)) {

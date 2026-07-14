@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Product } from '@/lib/db';
 
 type ProductFormState = {
@@ -73,6 +73,18 @@ export default function ProductAdminClient({ initialProducts }: { initialProduct
   const [productStatus, setProductStatus] = useState('');
   const [isSavingProduct, setIsSavingProduct] = useState(false);
   const [query, setQuery] = useState('');
+  const [categories, setCategories] = useState<{ id: number; name: string; slug: string }[]>([]);
+
+  useEffect(() => {
+    fetch('/api/categories')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCategories(data);
+        }
+      })
+      .catch((err) => console.error('Failed to load categories:', err));
+  }, []);
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -222,9 +234,11 @@ export default function ProductAdminClient({ initialProducts }: { initialProduct
           <label className="space-y-2">
             <span className={labelClass}>Category</span>
             <select className={fieldClass} value={productForm.category} onChange={(event) => updateProductField('category', event.target.value)}>
-              <option value="men">men</option>
-              <option value="women">women</option>
-              <option value="kit">kit</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.slug}>
+                  {cat.name}
+                </option>
+              ))}
             </select>
           </label>
           <label className="space-y-2">

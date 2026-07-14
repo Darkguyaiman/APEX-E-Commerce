@@ -71,8 +71,136 @@ export interface TestimonialInput {
   rating: number;
 }
 
+export interface ContactMessage {
+  id: number;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  is_read: boolean;
+  created_at?: string;
+}
+
+export interface ContactMessageInput {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface CategoryInput {
+  name: string;
+  slug: string;
+}
+
+export interface MembershipApplication {
+  id: number;
+  name: string;
+  email: string;
+  size: string;
+  position: string;
+  member_id: string;
+  created_at?: string;
+}
+
+export interface MembershipApplicationInput {
+  name: string;
+  email: string;
+  size: string;
+  position: string;
+  member_id: string;
+}
+
+export interface PromoCode {
+  id: number;
+  code: string;
+  type: 'percent' | 'fixed' | 'free_item';
+  value: number;
+  min_spend: number;
+  applies_to: 'all' | 'specific';
+  product_ids: string | null;
+  created_at?: string;
+}
+
+export interface PromoCodeInput {
+  code: string;
+  type: 'percent' | 'fixed' | 'free_item';
+  value: number;
+  min_spend: number;
+  applies_to: 'all' | 'specific';
+  product_ids: string | null;
+}
+
+export interface Customer {
+  id: number;
+  name: string;
+  email: string;
+  password_hash: string | null;
+  google_id: string | null;
+  provider: string;
+  email_verified: boolean;
+  created_at?: string;
+}
+
+export interface CustomerInput {
+  name: string;
+  email: string;
+  password_hash?: string | null;
+  google_id?: string | null;
+  provider: 'email' | 'google';
+  email_verified: boolean;
+}
+
+export interface CustomerOrderItem {
+  id?: number;
+  product_id: number;
+  product_name: string;
+  product_image_url: string;
+  size: string;
+  qty: number;
+  price: number;
+}
+
+export interface CustomerOrder {
+  id: number;
+  customer_id?: number | null;
+  first_name: string;
+  last_name: string;
+  address: string;
+  city: string;
+  zip_code: string;
+  payment_method: string;
+  subtotal: number;
+  tax: number;
+  total: number;
+  coupon_code?: string | null;
+  discount?: number | null;
+  delivery_proof?: string | null;
+  status: string;
+  created_at: string;
+  items: CustomerOrderItem[];
+}
+
+export interface AdminOrder extends CustomerOrder {
+  customer_name: string | null;
+  customer_email: string | null;
+}
+
+interface EmailVerificationToken {
+  customer_id: number;
+  token: string;
+  expires_at: string;
+}
+
 interface FallbackOrder {
   id: number;
+  customer_id?: number | null;
   first_name: string;
   last_name: string;
   address: string;
@@ -83,6 +211,10 @@ interface FallbackOrder {
   subtotal: number;
   tax: number;
   total: number;
+  coupon_code?: string | null;
+  discount?: number | null;
+  delivery_proof?: string | null;
+  status?: string;
   items: Array<{ product_id: number; size: string; qty: number; price: number }>;
   created_at: string;
 }
@@ -347,6 +479,13 @@ const poolConfig = {
 const productsFallbackPath = path.join(process.cwd(), '.products_fallback.json');
 const testimonialsFallbackPath = path.join(process.cwd(), '.testimonials_fallback.json');
 const settingsFallbackPath = path.join(process.cwd(), '.settings_fallback.json');
+const messagesFallbackPath = path.join(process.cwd(), '.messages_fallback.json');
+const categoriesFallbackPath = path.join(process.cwd(), '.categories_fallback.json');
+const membershipsFallbackPath = path.join(process.cwd(), '.memberships_fallback.json');
+const customersFallbackPath = path.join(process.cwd(), '.customers_fallback.json');
+const emailVerificationFallbackPath = path.join(process.cwd(), '.email_verifications_fallback.json');
+const ordersFallbackPath = path.join(process.cwd(), '.orders_fallback.json');
+const promocodesFallbackPath = path.join(process.cwd(), '.promocodes_fallback.json');
 const SHOP_HERO_PRODUCT_ID_KEY = 'shop_hero_product_id';
 
 const STATIC_TESTIMONIALS: Testimonial[] = [
@@ -420,6 +559,80 @@ function readFallbackSettings(): Record<string, string> {
 
 function writeFallbackSettings(settings: Record<string, string>) {
   writeJsonFile(settingsFallbackPath, settings);
+}
+
+function readFallbackMessages(): ContactMessage[] {
+  return readJsonFile<ContactMessage[]>(messagesFallbackPath, []);
+}
+
+function writeFallbackMessages(messages: ContactMessage[]) {
+  writeJsonFile(messagesFallbackPath, messages);
+}
+
+const STATIC_CATEGORIES: Category[] = [
+  { id: 1, name: 'Men', slug: 'men' },
+  { id: 2, name: 'Women', slug: 'women' },
+  { id: 3, name: 'Kit', slug: 'kit' }
+];
+
+function readFallbackCategories(): Category[] {
+  return readJsonFile<Category[]>(categoriesFallbackPath, STATIC_CATEGORIES);
+}
+
+function writeFallbackCategories(categories: Category[]) {
+  writeJsonFile(categoriesFallbackPath, categories);
+}
+
+const STATIC_MEMBERSHIPS: MembershipApplication[] = [
+  { id: 1, name: 'Marcus Alisson', email: 'marcus@pitch.com', size: '10.5', position: 'Midfielder', member_id: 'APX-9821', created_at: '2026-07-01T10:00:00.000Z' },
+  { id: 2, name: 'Sarah Jenkins', email: 'sarah.j@apex.com', size: '8.5', position: 'Forward', member_id: 'APX-4102', created_at: '2026-07-02T10:00:00.000Z' },
+  { id: 3, name: 'Kenji Sato', email: 'sato@football.jp', size: '9.5', position: 'Defender', member_id: 'APX-1289', created_at: '2026-07-03T10:00:00.000Z' }
+];
+
+function readFallbackMemberships(): MembershipApplication[] {
+  return readJsonFile<MembershipApplication[]>(membershipsFallbackPath, STATIC_MEMBERSHIPS);
+}
+
+function writeFallbackMemberships(memberships: MembershipApplication[]) {
+  writeJsonFile(membershipsFallbackPath, memberships);
+}
+
+function readFallbackCustomers(): Customer[] {
+  return readJsonFile<Customer[]>(customersFallbackPath, []);
+}
+
+function writeFallbackCustomers(customers: Customer[]) {
+  writeJsonFile(customersFallbackPath, customers);
+}
+
+function readFallbackEmailVerifications(): EmailVerificationToken[] {
+  return readJsonFile<EmailVerificationToken[]>(emailVerificationFallbackPath, []);
+}
+
+function writeFallbackEmailVerifications(tokens: EmailVerificationToken[]) {
+  writeJsonFile(emailVerificationFallbackPath, tokens);
+}
+
+function readFallbackOrders(): FallbackOrder[] {
+  return readJsonFile<FallbackOrder[]>(ordersFallbackPath, []);
+}
+
+function writeFallbackOrders(orders: FallbackOrder[]) {
+  writeJsonFile(ordersFallbackPath, orders);
+}
+
+const STATIC_PROMO_CODES: PromoCode[] = [
+  { id: 1, code: 'APEX20', type: 'percent', value: 20.00, min_spend: 0.00, applies_to: 'all', product_ids: null, created_at: '2026-07-01T10:00:00.000Z' },
+  { id: 2, code: 'RM50OVER300', type: 'fixed', value: 50.00, min_spend: 300.00, applies_to: 'all', product_ids: null, created_at: '2026-07-02T10:00:00.000Z' },
+  { id: 3, code: 'FREEBALL', type: 'free_item', value: 0.00, min_spend: 500.00, applies_to: 'all', product_ids: '12', created_at: '2026-07-03T10:00:00.000Z' }
+];
+
+function readFallbackPromoCodes(): PromoCode[] {
+  return readJsonFile<PromoCode[]>(promocodesFallbackPath, STATIC_PROMO_CODES);
+}
+
+function writeFallbackPromoCodes(promos: PromoCode[]) {
+  writeJsonFile(promocodesFallbackPath, promos);
 }
 
 function nextLocalId(items: Array<{ id: number }>) {
@@ -813,6 +1026,187 @@ export async function deleteProduct(id: number): Promise<void> {
   }
 }
 
+// ==================== Customers ====================
+
+async function ensureCustomerTables() {
+  await rawQuery(
+    `CREATE TABLE IF NOT EXISTS customers (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL UNIQUE,
+      password_hash VARCHAR(255) NULL,
+      google_id VARCHAR(255) NULL UNIQUE,
+      provider VARCHAR(50) NOT NULL,
+      email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
+  );
+
+  await rawQuery(
+    `CREATE TABLE IF NOT EXISTS email_verification_tokens (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      customer_id INT NOT NULL,
+      token VARCHAR(255) NOT NULL UNIQUE,
+      expires_at TIMESTAMP NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
+  );
+}
+
+export async function findCustomerById(id: number): Promise<Customer | null> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureCustomerTables();
+
+    const rows = await rawQuery<Customer[]>('SELECT * FROM customers WHERE id = ? LIMIT 1', [id]);
+    return rows[0] || null;
+  } catch {
+    return readFallbackCustomers().find((customer) => customer.id === id) || null;
+  }
+}
+
+export async function findCustomerByEmail(email: string): Promise<Customer | null> {
+  const normalizedEmail = email.trim().toLowerCase();
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureCustomerTables();
+
+    const rows = await rawQuery<Customer[]>('SELECT * FROM customers WHERE email = ? LIMIT 1', [normalizedEmail]);
+    return rows[0] || null;
+  } catch {
+    return readFallbackCustomers().find((customer) => customer.email.toLowerCase() === normalizedEmail) || null;
+  }
+}
+
+export async function findCustomerByGoogleId(googleId: string): Promise<Customer | null> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureCustomerTables();
+
+    const rows = await rawQuery<Customer[]>('SELECT * FROM customers WHERE google_id = ? LIMIT 1', [googleId]);
+    return rows[0] || null;
+  } catch {
+    return readFallbackCustomers().find((customer) => customer.google_id === googleId) || null;
+  }
+}
+
+export async function createCustomer(input: CustomerInput): Promise<Customer> {
+  const normalizedEmail = input.email.trim().toLowerCase();
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureCustomerTables();
+
+    const result = await rawQuery<ResultSetHeader>(
+      `INSERT INTO customers (name, email, password_hash, google_id, provider, email_verified)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        input.name,
+        normalizedEmail,
+        input.password_hash || null,
+        input.google_id || null,
+        input.provider,
+        input.email_verified
+      ]
+    );
+
+    return {
+      id: result.insertId,
+      name: input.name,
+      email: normalizedEmail,
+      password_hash: input.password_hash || null,
+      google_id: input.google_id || null,
+      provider: input.provider,
+      email_verified: input.email_verified,
+      created_at: new Date().toISOString()
+    };
+  } catch {
+    const customers = readFallbackCustomers();
+    if (customers.some((customer) => customer.email.toLowerCase() === normalizedEmail)) {
+      throw new Error('An account already exists for this email.');
+    }
+    const customer: Customer = {
+      id: nextLocalId(customers),
+      name: input.name,
+      email: normalizedEmail,
+      password_hash: input.password_hash || null,
+      google_id: input.google_id || null,
+      provider: input.provider,
+      email_verified: input.email_verified,
+      created_at: new Date().toISOString()
+    };
+    writeFallbackCustomers([...customers, customer]);
+    return customer;
+  }
+}
+
+export async function createEmailVerificationToken(customerId: number, token: string): Promise<void> {
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureCustomerTables();
+
+    await rawQuery('DELETE FROM email_verification_tokens WHERE customer_id = ?', [customerId]);
+    await rawQuery(
+      'INSERT INTO email_verification_tokens (customer_id, token, expires_at) VALUES (?, ?, ?)',
+      [customerId, token, expiresAt.slice(0, 19).replace('T', ' ')]
+    );
+  } catch {
+    const tokens = readFallbackEmailVerifications()
+      .filter((item) => item.customer_id !== customerId && item.token !== token);
+    writeFallbackEmailVerifications([...tokens, { customer_id: customerId, token, expires_at: expiresAt }]);
+  }
+}
+
+export async function verifyCustomerByToken(token: string): Promise<Customer | null> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureCustomerTables();
+
+    const rows = await rawQuery<Array<{ customer_id: number; expires_at: string }>>(
+      'SELECT customer_id, expires_at FROM email_verification_tokens WHERE token = ? LIMIT 1',
+      [token]
+    );
+    const match = rows[0];
+    if (!match || new Date(match.expires_at).getTime() < Date.now()) return null;
+
+    await verifyCustomerEmail(match.customer_id);
+    await rawQuery('DELETE FROM email_verification_tokens WHERE token = ?', [token]);
+    return findCustomerById(match.customer_id);
+  } catch {
+    const tokens = readFallbackEmailVerifications();
+    const match = tokens.find((item) => item.token === token);
+    if (!match || new Date(match.expires_at).getTime() < Date.now()) return null;
+
+    await verifyCustomerEmail(match.customer_id);
+    writeFallbackEmailVerifications(tokens.filter((item) => item.token !== token));
+    return findCustomerById(match.customer_id);
+  }
+}
+
+export async function verifyCustomerEmail(customerId: number): Promise<void> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureCustomerTables();
+
+    await rawQuery('UPDATE customers SET email_verified = TRUE WHERE id = ?', [customerId]);
+  } catch {
+    const customers = readFallbackCustomers();
+    const index = customers.findIndex((customer) => customer.id === customerId);
+    if (index !== -1) {
+      customers[index] = { ...customers[index], email_verified: true };
+      writeFallbackCustomers(customers);
+    }
+  }
+}
+
 export async function getTestimonials(): Promise<Testimonial[]> {
   try {
     const { connected } = await checkConnection();
@@ -916,9 +1310,41 @@ export async function deleteTestimonial(id: number): Promise<void> {
   }
 }
 
+async function ensureOrderCustomerColumn() {
+  try {
+    await rawQuery('ALTER TABLE orders ADD COLUMN customer_id INT NULL AFTER id');
+  } catch {
+    // Column may already exist or the local fallback may be active.
+  }
+
+  try {
+    await rawQuery(
+      'ALTER TABLE orders ADD CONSTRAINT fk_orders_customer_id FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL'
+    );
+  } catch {
+    // Constraint may already exist.
+  }
+
+  // Setup discount and delivery proof columns
+  await ensureOrderDiscountAndProofColumns();
+}
+
+async function ensureOrderDiscountAndProofColumns() {
+  try {
+    await rawQuery('ALTER TABLE orders ADD COLUMN coupon_code VARCHAR(100) NULL AFTER total');
+  } catch {}
+  try {
+    await rawQuery('ALTER TABLE orders ADD COLUMN discount DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER coupon_code');
+  } catch {}
+  try {
+    await rawQuery('ALTER TABLE orders ADD COLUMN delivery_proof VARCHAR(255) NULL AFTER status');
+  } catch {}
+}
+
 // Create Order logic
 export async function createOrder(
   order: {
+    customer_id?: number | null;
     first_name: string;
     last_name: string;
     address: string;
@@ -929,6 +1355,8 @@ export async function createOrder(
     subtotal: number;
     tax: number;
     total: number;
+    coupon_code?: string | null;
+    discount?: number | null;
   },
   items: Array<{ product_id: number; size: string; qty: number; price: number }>
 ): Promise<number> {
@@ -938,6 +1366,8 @@ export async function createOrder(
 
     const p = getPool();
     if (!p) throw new Error('No pool available');
+    await ensureCustomerTables();
+    await ensureOrderCustomerColumn();
 
     // Run order insert in transaction
     const conn = await p.getConnection();
@@ -945,9 +1375,10 @@ export async function createOrder(
       await conn.beginTransaction();
 
       const [res] = await conn.execute(
-        `INSERT INTO orders (first_name, last_name, address, city, zip_code, payment_method, card_number, subtotal, tax, total) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO orders (customer_id, first_name, last_name, address, city, zip_code, payment_method, card_number, subtotal, tax, total, coupon_code, discount) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
+          order.customer_id || null,
           order.first_name,
           order.last_name,
           order.address,
@@ -957,7 +1388,9 @@ export async function createOrder(
           order.card_number || null,
           order.subtotal,
           order.tax,
-          order.total
+          order.total,
+          order.coupon_code || null,
+          order.discount || 0
         ]
       );
 
@@ -980,15 +1413,7 @@ export async function createOrder(
     }
   } catch {
     // Write orders to a local fallback file
-    const fallbackPath = path.join(process.cwd(), '.orders_fallback.json');
-    let ordersList: FallbackOrder[] = [];
-    if (fs.existsSync(fallbackPath)) {
-      try {
-        ordersList = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
-      } catch {
-        ordersList = [];
-      }
-    }
+    const ordersList = readFallbackOrders();
     
     const mockOrderId = Math.floor(Math.random() * 90000) + 10000;
     const fallbackOrder = {
@@ -999,9 +1424,588 @@ export async function createOrder(
     };
     
     ordersList.push(fallbackOrder);
-    fs.writeFileSync(fallbackPath, JSON.stringify(ordersList, null, 2), 'utf8');
+    writeFallbackOrders(ordersList);
     
-    console.log(`MySQL Disconnected. Order logged locally to: ${fallbackPath}`);
+    console.log(`MySQL Disconnected. Order logged locally to: ${ordersFallbackPath}`);
     return mockOrderId;
   }
 }
+
+export async function getOrdersForCustomer(customerId: number): Promise<CustomerOrder[]> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureCustomerTables();
+    await ensureOrderCustomerColumn();
+
+    const orders = await rawQuery<Array<Omit<CustomerOrder, 'items'>>>(
+      `SELECT id, customer_id, first_name, last_name, address, city, zip_code,
+              payment_method, subtotal, tax, total, coupon_code, discount, status, delivery_proof, created_at
+       FROM orders
+       WHERE customer_id = ?
+       ORDER BY created_at DESC, id DESC`,
+      [customerId]
+    );
+
+    if (orders.length === 0) return [];
+
+    const orderIds = orders.map((order) => order.id);
+    const placeholders = orderIds.map(() => '?').join(',');
+    const items = await rawQuery<Array<CustomerOrderItem & { order_id: number }>>(
+      `SELECT oi.id, oi.order_id, oi.product_id, p.name AS product_name,
+              p.image_url AS product_image_url, oi.size, oi.qty, oi.price
+       FROM order_items oi
+       LEFT JOIN products p ON p.id = oi.product_id
+       WHERE oi.order_id IN (${placeholders})
+       ORDER BY oi.id ASC`,
+      orderIds
+    );
+
+    return orders.map((order) => ({
+      ...order,
+      subtotal: Number(order.subtotal),
+      tax: Number(order.tax),
+      total: Number(order.total),
+      discount: order.discount ? Number(order.discount) : 0,
+      coupon_code: order.coupon_code || null,
+      delivery_proof: order.delivery_proof || null,
+      items: items
+        .filter((item) => item.order_id === order.id)
+        .map((item) => ({
+          id: item.id,
+          product_id: item.product_id,
+          product_name: item.product_name || `Product #${item.product_id}`,
+          product_image_url: item.product_image_url || '/apex-logo.png',
+          size: item.size,
+          qty: Number(item.qty),
+          price: Number(item.price)
+        }))
+    }));
+  } catch {
+    const fallbackOrders = readFallbackOrders()
+      .filter((order) => order.customer_id === customerId)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    const products = readFallbackProducts();
+    return fallbackOrders.map((order) => ({
+      id: order.id,
+      customer_id: order.customer_id || null,
+      first_name: order.first_name,
+      last_name: order.last_name,
+      address: order.address,
+      city: order.city,
+      zip_code: order.zip_code,
+      payment_method: order.payment_method,
+      subtotal: Number(order.subtotal),
+      tax: Number(order.tax),
+      total: Number(order.total),
+      status: order.status || 'confirmed',
+      coupon_code: order.coupon_code || null,
+      discount: order.discount ? Number(order.discount) : 0,
+      delivery_proof: order.delivery_proof || null,
+      created_at: order.created_at,
+      items: order.items.map((item) => {
+        const product = products.find((candidate) => candidate.id === item.product_id);
+        return {
+          product_id: item.product_id,
+          product_name: product?.name || `Product #${item.product_id}`,
+          product_image_url: product?.image_url || '/apex-logo.png',
+          size: item.size,
+          qty: Number(item.qty),
+          price: Number(item.price)
+        };
+      })
+    }));
+  }
+}
+
+export async function getAdminOrders(): Promise<AdminOrder[]> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureCustomerTables();
+    await ensureOrderCustomerColumn();
+
+    const orders = await rawQuery<Array<Omit<AdminOrder, 'items'>>>(
+      `SELECT o.id, o.customer_id, o.first_name, o.last_name, o.address, o.city, o.zip_code,
+              o.payment_method, o.subtotal, o.tax, o.total, o.coupon_code, o.discount, o.status, o.delivery_proof, o.created_at,
+              c.name AS customer_name, c.email AS customer_email
+       FROM orders o
+       LEFT JOIN customers c ON c.id = o.customer_id
+       ORDER BY o.created_at DESC, o.id DESC`
+    );
+
+    if (orders.length === 0) return [];
+
+    const orderIds = orders.map((order) => order.id);
+    const placeholders = orderIds.map(() => '?').join(',');
+    const items = await rawQuery<Array<CustomerOrderItem & { order_id: number }>>(
+      `SELECT oi.id, oi.order_id, oi.product_id, p.name AS product_name,
+              p.image_url AS product_image_url, oi.size, oi.qty, oi.price
+       FROM order_items oi
+       LEFT JOIN products p ON p.id = oi.product_id
+       WHERE oi.order_id IN (${placeholders})
+       ORDER BY oi.id ASC`,
+      orderIds
+    );
+
+    return orders.map((order) => ({
+      ...order,
+      subtotal: Number(order.subtotal),
+      tax: Number(order.tax),
+      total: Number(order.total),
+      discount: order.discount ? Number(order.discount) : 0,
+      coupon_code: order.coupon_code || null,
+      delivery_proof: order.delivery_proof || null,
+      items: items
+        .filter((item) => item.order_id === order.id)
+        .map((item) => ({
+          id: item.id,
+          product_id: item.product_id,
+          product_name: item.product_name || `Product #${item.product_id}`,
+          product_image_url: item.product_image_url || '/apex-logo.png',
+          size: item.size,
+          qty: Number(item.qty),
+          price: Number(item.price)
+        }))
+    }));
+  } catch {
+    const products = readFallbackProducts();
+    const customers = readFallbackCustomers();
+
+    return readFallbackOrders()
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .map((order) => {
+        const customer = customers.find((candidate) => candidate.id === order.customer_id);
+        return {
+          id: order.id,
+          customer_id: order.customer_id || null,
+          customer_name: customer?.name || null,
+          customer_email: customer?.email || null,
+          first_name: order.first_name,
+          last_name: order.last_name,
+          address: order.address,
+          city: order.city,
+          zip_code: order.zip_code,
+          payment_method: order.payment_method,
+          subtotal: Number(order.subtotal),
+          tax: Number(order.tax),
+          total: Number(order.total),
+          status: order.status || 'confirmed',
+          coupon_code: order.coupon_code || null,
+          discount: order.discount ? Number(order.discount) : 0,
+          delivery_proof: order.delivery_proof || null,
+          created_at: order.created_at,
+          items: order.items.map((item) => {
+            const product = products.find((candidate) => candidate.id === item.product_id);
+            return {
+              product_id: item.product_id,
+              product_name: product?.name || `Product #${item.product_id}`,
+              product_image_url: product?.image_url || '/apex-logo.png',
+              size: item.size,
+              qty: Number(item.qty),
+              price: Number(item.price)
+            };
+          })
+        };
+      });
+  }
+}
+
+export async function updateOrderStatus(orderId: number, status: string): Promise<void> {
+  await updateOrderStatusAndProof(orderId, status);
+}
+
+export async function updateOrderStatusAndProof(orderId: number, status: string, deliveryProof?: string | null): Promise<void> {
+  const allowedStatuses = ['confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+  if (!allowedStatuses.includes(status)) {
+    throw new Error('Invalid order status.');
+  }
+
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    if (deliveryProof !== undefined) {
+      await rawQuery<ResultSetHeader>(
+        'UPDATE orders SET status = ?, delivery_proof = ? WHERE id = ?',
+        [status, deliveryProof, orderId]
+      );
+    } else {
+      await rawQuery<ResultSetHeader>(
+        'UPDATE orders SET status = ? WHERE id = ?',
+        [status, orderId]
+      );
+    }
+  } catch {
+    const orders = readFallbackOrders();
+    const index = orders.findIndex((order) => order.id === orderId);
+    if (index === -1) {
+      throw new Error('Order not found.');
+    }
+
+    orders[index] = { 
+      ...orders[index], 
+      status,
+      ...(deliveryProof !== undefined ? { delivery_proof: deliveryProof } : {})
+    };
+    writeFallbackOrders(orders);
+  }
+}
+
+export async function getOrderById(orderId: number): Promise<AdminOrder | null> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureCustomerTables();
+    await ensureOrderCustomerColumn();
+
+    const rows = await rawQuery<Array<Omit<AdminOrder, 'items'>>>(
+      `SELECT o.id, o.customer_id, o.first_name, o.last_name, o.address, o.city, o.zip_code,
+              o.payment_method, o.subtotal, o.tax, o.total, o.coupon_code, o.discount, o.status, o.delivery_proof, o.created_at,
+              c.name AS customer_name, c.email AS customer_email
+       FROM orders o
+       LEFT JOIN customers c ON c.id = o.customer_id
+       WHERE o.id = ?`,
+      [orderId]
+    );
+
+    if (rows.length === 0) return null;
+    const order = rows[0];
+
+    const items = await rawQuery<Array<CustomerOrderItem & { order_id: number }>>(
+      `SELECT oi.id, oi.order_id, oi.product_id, p.name AS product_name,
+              p.image_url AS product_image_url, oi.size, oi.qty, oi.price
+       FROM order_items oi
+       LEFT JOIN products p ON p.id = oi.product_id
+       WHERE oi.order_id = ?
+       ORDER BY oi.id ASC`,
+      [orderId]
+    );
+
+    return {
+      ...order,
+      subtotal: Number(order.subtotal),
+      tax: Number(order.tax),
+      total: Number(order.total),
+      discount: order.discount ? Number(order.discount) : 0,
+      coupon_code: order.coupon_code || null,
+      delivery_proof: order.delivery_proof || null,
+      items: items.map((item) => ({
+        id: item.id,
+        product_id: item.product_id,
+        product_name: item.product_name || `Product #${item.product_id}`,
+        product_image_url: item.product_image_url || '/apex-logo.png',
+        size: item.size,
+        qty: Number(item.qty),
+        price: Number(item.price)
+      }))
+    };
+  } catch {
+    const all = await getAdminOrders();
+    return all.find(o => o.id === orderId) || null;
+  }
+}
+
+// ==================== Contact Messages ====================
+
+export async function getContactMessages(): Promise<ContactMessage[]> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    return await rawQuery<ContactMessage[]>(
+      'SELECT * FROM contact_messages ORDER BY created_at DESC, id DESC'
+    );
+  } catch {
+    return readFallbackMessages().sort((a, b) => b.id - a.id);
+  }
+}
+
+export async function createContactMessage(msg: ContactMessageInput): Promise<ContactMessage> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    const result = await rawQuery<ResultSetHeader>(
+      `INSERT INTO contact_messages (name, email, subject, message)
+       VALUES (?, ?, ?, ?)`,
+      [msg.name, msg.email, msg.subject, msg.message]
+    );
+
+    return {
+      id: result.insertId,
+      ...msg,
+      is_read: false,
+      created_at: new Date().toISOString()
+    };
+  } catch {
+    const messages = readFallbackMessages();
+    const created: ContactMessage = {
+      id: nextLocalId(messages),
+      ...msg,
+      is_read: false,
+      created_at: new Date().toISOString()
+    };
+    writeFallbackMessages([...messages, created]);
+    return created;
+  }
+}
+
+export async function markMessageRead(id: number): Promise<void> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    await rawQuery<ResultSetHeader>(
+      'UPDATE contact_messages SET is_read = TRUE WHERE id = ?',
+      [id]
+    );
+  } catch {
+    const messages = readFallbackMessages();
+    const idx = messages.findIndex(m => m.id === id);
+    if (idx !== -1) {
+      messages[idx].is_read = true;
+      writeFallbackMessages(messages);
+    }
+  }
+}
+
+export async function deleteContactMessage(id: number): Promise<void> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    await rawQuery<ResultSetHeader>(
+      'DELETE FROM contact_messages WHERE id = ?',
+      [id]
+    );
+  } catch {
+    const messages = readFallbackMessages();
+    writeFallbackMessages(messages.filter(m => m.id !== id));
+  }
+}
+
+// ==================== Categories ====================
+
+export async function getCategories(): Promise<Category[]> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    return await rawQuery<Category[]>(
+      'SELECT * FROM categories ORDER BY id ASC'
+    );
+  } catch {
+    return readFallbackCategories();
+  }
+}
+
+export async function createCategory(cat: CategoryInput): Promise<Category> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    const result = await rawQuery<ResultSetHeader>(
+      `INSERT INTO categories (name, slug) VALUES (?, ?)`,
+      [cat.name, cat.slug]
+    );
+
+    return {
+      id: result.insertId,
+      ...cat
+    };
+  } catch {
+    const categories = readFallbackCategories();
+    const created: Category = {
+      id: nextLocalId(categories),
+      ...cat
+    };
+    writeFallbackCategories([...categories, created]);
+    return created;
+  }
+}
+
+export async function deleteCategory(id: number): Promise<void> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    await rawQuery<ResultSetHeader>(
+      'DELETE FROM categories WHERE id = ?',
+      [id]
+    );
+  } catch {
+    const categories = readFallbackCategories();
+    writeFallbackCategories(categories.filter(c => c.id !== id));
+  }
+}
+
+export async function getCategoryById(id: number): Promise<Category | null> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    const rows = await rawQuery<Category[]>('SELECT * FROM categories WHERE id = ?', [id]);
+    return rows.length > 0 ? rows[0] : null;
+  } catch {
+    return readFallbackCategories().find(c => c.id === id) || null;
+  }
+}
+
+export async function updateCategory(id: number, cat: CategoryInput): Promise<Category> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    await rawQuery<ResultSetHeader>(
+      'UPDATE categories SET name = ?, slug = ? WHERE id = ?',
+      [cat.name, cat.slug, id]
+    );
+
+    return {
+      id,
+      ...cat
+    };
+  } catch {
+    const categories = readFallbackCategories();
+    const index = categories.findIndex(c => c.id === id);
+    if (index !== -1) {
+      categories[index] = { id, ...cat };
+      writeFallbackCategories(categories);
+    }
+    return { id, ...cat };
+  }
+}
+
+// ==================== Memberships ====================
+
+export async function getMembershipApplications(): Promise<MembershipApplication[]> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    return await rawQuery<MembershipApplication[]>(
+      'SELECT * FROM membership_applications ORDER BY created_at DESC, id DESC'
+    );
+  } catch {
+    return readFallbackMemberships().sort((a, b) => b.id - a.id);
+  }
+}
+
+export async function createMembershipApplication(app: MembershipApplicationInput): Promise<MembershipApplication> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    const result = await rawQuery<ResultSetHeader>(
+      `INSERT INTO membership_applications (name, email, size, position, member_id) VALUES (?, ?, ?, ?, ?)`,
+      [app.name, app.email, app.size, app.position, app.member_id]
+    );
+
+    return {
+      id: result.insertId,
+      ...app,
+      created_at: new Date().toISOString()
+    };
+  } catch {
+    const memberships = readFallbackMemberships();
+    const created: MembershipApplication = {
+      id: nextLocalId(memberships),
+      ...app,
+      created_at: new Date().toISOString()
+    };
+    writeFallbackMemberships([...memberships, created]);
+    return created;
+  }
+}
+
+export async function deleteMembershipApplication(id: number): Promise<void> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    await rawQuery<ResultSetHeader>(
+      'DELETE FROM membership_applications WHERE id = ?',
+      [id]
+    );
+  } catch {
+    const memberships = readFallbackMemberships();
+    writeFallbackMemberships(memberships.filter(m => m.id !== id));
+  }
+}
+
+// ==================== Promo Codes ====================
+
+export async function getPromoCodes(): Promise<PromoCode[]> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    return await rawQuery<PromoCode[]>(
+      'SELECT * FROM promo_codes ORDER BY created_at DESC, id DESC'
+    );
+  } catch {
+    return readFallbackPromoCodes().sort((a, b) => b.id - a.id);
+  }
+}
+
+export async function getPromoCodeByCode(code: string): Promise<PromoCode | null> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    const rows = await rawQuery<PromoCode[]>(
+      'SELECT * FROM promo_codes WHERE UPPER(code) = UPPER(?)',
+      [code.trim()]
+    );
+    return rows.length > 0 ? rows[0] : null;
+  } catch {
+    return readFallbackPromoCodes().find(p => p.code.toUpperCase() === code.trim().toUpperCase()) || null;
+  }
+}
+
+export async function createPromoCode(promo: PromoCodeInput): Promise<PromoCode> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    const result = await rawQuery<ResultSetHeader>(
+      `INSERT INTO promo_codes (code, type, value, min_spend, applies_to, product_ids) VALUES (?, ?, ?, ?, ?, ?)`,
+      [promo.code.toUpperCase(), promo.type, promo.value, promo.min_spend, promo.applies_to, promo.product_ids]
+    );
+
+    return {
+      id: result.insertId,
+      ...promo,
+      code: promo.code.toUpperCase(),
+      created_at: new Date().toISOString()
+    };
+  } catch {
+    const promos = readFallbackPromoCodes();
+    const created: PromoCode = {
+      id: nextLocalId(promos),
+      ...promo,
+      code: promo.code.toUpperCase(),
+      created_at: new Date().toISOString()
+    };
+    writeFallbackPromoCodes([...promos, created]);
+    return created;
+  }
+}
+
+export async function deletePromoCode(id: number): Promise<void> {
+  try {
+    const { connected } = await checkConnection();
+    if (!connected || isMockDb) throw new Error('Local fallback triggered');
+
+    await rawQuery<ResultSetHeader>(
+      'DELETE FROM promo_codes WHERE id = ?',
+      [id]
+    );
+  } catch {
+    const promos = readFallbackPromoCodes();
+    writeFallbackPromoCodes(promos.filter(p => p.id !== id));
+  }
+}
+

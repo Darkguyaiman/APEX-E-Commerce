@@ -1,4 +1,4 @@
-# Apex Pitch (CORE_X) Performance Gear
+# Apex Performance Gear
 
 A premium, high-contrast, e-commerce web application built with **Next.js**, **TypeScript**, **Tailwind CSS v4**, and raw **MySQL** queries. This project is created exactly from the provided "Mock-Up Stitch" designs.
 

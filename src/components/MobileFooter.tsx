@@ -43,13 +43,15 @@ const MobileFooter: React.FC = () => {
           <span className="material-symbols-outlined">straighten</span>
           <span className="font-label-caps text-label-caps mt-1">FIT</span>
         </button>
-        <button 
-          onClick={() => handleAlert('PROFILE')}
-          className="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all active:scale-95 duration-100 cursor-pointer"
+        <Link
+          href="/profile"
+          className={`flex flex-col items-center justify-center transition-all active:scale-95 duration-100 ${
+            pathname === '/profile' || pathname === '/orders' || pathname === '/login' || pathname === '/signup' ? 'text-primary-container font-bold scale-110' : 'text-on-surface-variant/60 hover:text-primary'
+          }`}
         >
           <span className="material-symbols-outlined">person</span>
           <span className="font-label-caps text-label-caps mt-1">PROFILE</span>
-        </button>
+        </Link>
       </nav>
     </>
   );

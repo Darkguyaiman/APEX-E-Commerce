@@ -18,18 +18,21 @@ export default function AdminLoginForm() {
         <p className="mt-3 text-sm leading-relaxed text-on-surface-variant">
           Access catalog, product, and testimonial controls.
         </p>
+        <p className="mt-1 text-xs text-on-surface-variant/50">
+          Sign in with your admin username or email.
+        </p>
       </div>
 
       <div className="space-y-4">
         <label className="block space-y-2">
           <span className="font-label-caps text-[10px] text-on-surface-variant tracking-widest uppercase">
-            Username
+            Username or Email
           </span>
           <input
             name="username"
             autoComplete="username"
             className="w-full bg-surface-container border border-white/10 px-4 py-3 text-sm text-primary placeholder:text-on-surface-variant/70 focus:border-primary-container"
-            placeholder="admin"
+            placeholder="admin or admin@example.com"
             required
           />
         </label>

@@ -1,10 +1,14 @@
 import Link from 'next/link';
-import { getProducts, getTestimonials } from '@/lib/db';
+import { getProducts, getTestimonials, getContactMessages, getMembershipApplications, getAdminOrders, getPromoCodes } from '@/lib/db';
 
 export default async function AdminDashboardPage() {
-  const [products, testimonials] = await Promise.all([
+  const [products, testimonials, messages, memberships, orders, promos] = await Promise.all([
     getProducts(),
-    getTestimonials()
+    getTestimonials(),
+    getContactMessages(),
+    getMembershipApplications(),
+    getAdminOrders(),
+    getPromoCodes()
   ]);
 
   const menProducts = products.filter((product) => product.category === 'men').length;
@@ -28,11 +32,14 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-4 xl:grid-cols-7">
         {[
+          ['Orders', orders.length, 'receipt_long'],
           ['Products', products.length, 'inventory_2'],
           ['Testimonials', testimonials.length, 'rate_review'],
-          ['Kit Items', kitProducts, 'sports_soccer'],
+          ['Messages', messages.length, 'inbox'],
+          ['Club Members', memberships.length, 'badge'],
+          ['Promo Codes', promos.length, 'local_offer'],
           ['Avg Rating', avgRating ? avgRating.toFixed(1) : '0.0', 'star']
         ].map(([label, value, icon]) => (
           <div key={label} className="border border-white/10 bg-surface-container-low p-5">

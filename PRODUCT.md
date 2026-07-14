@@ -5,10 +5,10 @@
 product
 
 ## Users
-Football boot shoppers browse Apex Pitch to compare elite boots, training kit, and performance details before checkout. Store operators need lightweight catalog controls for products and social proof without leaving the app.
+Football boot shoppers browse Apex to compare elite boots, training kit, and performance details before checkout. Store operators need lightweight catalog controls for products and social proof without leaving the app.
 
 ## Product Purpose
-Apex Pitch is a premium ecommerce experience for performance football gear. It should make products feel technical, fast, and trustworthy while keeping browsing, cart, checkout, and admin maintenance direct.
+Apex is a premium ecommerce experience for performance football gear. It should make products feel technical, fast, and trustworthy while keeping browsing, cart, checkout, and admin maintenance direct.
 
 ## Brand Personality
 Precise, intense, elite. The interface should feel like a high-performance boot lab and match-day retail experience rather than a generic sports shop.

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import CustomerNav from '@/components/CustomerNav';
 
 const TopAppBar: React.FC = () => {
   const { getCartCount, setIsCartOpen } = useCart();
@@ -64,6 +65,7 @@ const TopAppBar: React.FC = () => {
 
       {/* Cart Counter Trigger */}
       <div className="flex items-center gap-4">
+        <CustomerNav />
         <button
           onClick={() => setIsCartOpen(true)}
           className="material-symbols-outlined relative hover:opacity-80 transition-opacity active:scale-95 duration-150 p-2 cursor-pointer"

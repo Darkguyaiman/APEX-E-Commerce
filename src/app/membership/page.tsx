@@ -43,17 +43,31 @@ export default function MembershipPage() {
     memberCardRef.current.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API registration delay
-    setTimeout(() => {
-      const generatedId = `APX-${Math.floor(1000 + Math.random() * 9000)}`;
+    const generatedId = `APX-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    try {
+      const res = await fetch('/api/membership', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          member_id: generatedId
+        })
+      });
+
+      if (!res.ok) throw new Error('Registration failed');
+      
       setMemberId(generatedId);
-      setIsSubmitting(false);
       setSubmitted(true);
-    }, 1200);
+    } catch {
+      alert('Could not submit application. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

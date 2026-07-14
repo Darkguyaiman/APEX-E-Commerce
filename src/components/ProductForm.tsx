@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -72,6 +72,22 @@ export default function ProductForm({ initialProduct }: ProductFormProps) {
   const [productForm, setProductForm] = useState<ProductFormState>(
     initialProduct ? productToForm(initialProduct) : emptyProductForm
   );
+  const [categories, setCategories] = useState<{ id: number; name: string; slug: string }[]>([]);
+
+  useEffect(() => {
+    fetch('/api/categories')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCategories(data);
+          // If creating new product and data has items, default category to first category slug
+          if (!initialProduct && data.length > 0) {
+            setProductForm(prev => ({ ...prev, category: data[0].slug }));
+          }
+        }
+      })
+      .catch((err) => console.error('Failed to load categories:', err));
+  }, [initialProduct]);
   
   // Track images list state
   const [images, setImages] = useState<ProductImage[]>(
@@ -350,9 +366,11 @@ export default function ProductForm({ initialProduct }: ProductFormProps) {
         <label className="space-y-2">
           <span className={labelClass}>Category</span>
           <select className={fieldClass} value={productForm.category} onChange={(event) => updateProductField('category', event.target.value)}>
-            <option value="men">men</option>
-            <option value="women">women</option>
-            <option value="kit">kit</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.slug}>
+                {cat.name}
+              </option>
+            ))}
           </select>
         </label>
         <label className="space-y-2">

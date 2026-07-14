@@ -18,7 +18,7 @@ interface CartContextType {
   cart: CartItem[];
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
-  addToCart: (product: any, size: string, qty?: number) => void;
+  addToCart: (product: CartProductInput, size: string, qty?: number) => void;
   removeFromCart: (id: number, size: string) => void;
   updateQty: (id: number, size: string, qty: number) => void;
   clearCart: () => void;
@@ -26,34 +26,45 @@ interface CartContextType {
   getCartCount: () => number;
 }
 
+type CartProductInput = {
+  id: number;
+  name: string;
+  price: number | string;
+  image_url: string;
+  category: string;
+  colorway?: string;
+  type_chip?: string | null;
+};
+
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
+const CART_STORAGE_KEY = 'apex_pitch_cart';
 
-  // Load cart from LocalStorage on mount
-  useEffect(() => {
-    const storedCart = localStorage.getItem('apex_pitch_cart');
-    if (storedCart) {
-      try {
-        setCart(JSON.parse(storedCart));
-      } catch (e) {
-        console.error('Failed to parse cart data from localStorage', e);
-      }
-    }
-    setIsLoaded(true);
-  }, []);
+function loadStoredCart(): CartItem[] {
+  if (typeof window === 'undefined') return [];
+
+  const storedCart = window.localStorage.getItem(CART_STORAGE_KEY);
+  if (!storedCart) return [];
+
+  try {
+    const parsed = JSON.parse(storedCart);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error('Failed to parse cart data from localStorage', e);
+    return [];
+  }
+}
+
+export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [cart, setCart] = useState<CartItem[]>(loadStoredCart);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Save cart to LocalStorage on changes
   useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('apex_pitch_cart', JSON.stringify(cart));
-    }
-  }, [cart, isLoaded]);
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  }, [cart]);
 
-  const addToCart = (product: any, size: string, qty = 1) => {
+  const addToCart = (product: CartProductInput, size: string, qty = 1) => {
     setCart((prevCart) => {
       const existingItemIndex = prevCart.findIndex(
         (item) => item.id === product.id && item.size === size
@@ -104,6 +115,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const clearCart = () => {
     setCart([]);
+    localStorage.removeItem(CART_STORAGE_KEY);
   };
 
   const getCartSubtotal = () => {

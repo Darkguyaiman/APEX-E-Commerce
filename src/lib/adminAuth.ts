@@ -18,6 +18,10 @@ function getAdminPassword() {
   return process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD;
 }
 
+function getAdminEmail() {
+  return process.env.ADMIN_EMAIL || '';
+}
+
 function createSessionToken(username: string) {
   return createHmac('sha256', getSecret()).update(`admin:${username}`).digest('hex');
 }
@@ -33,13 +37,23 @@ function safeCompare(left: string, right: string) {
   return timingSafeEqual(leftBuffer, rightBuffer);
 }
 
-export function validateAdminCredentials(username: string, password: string) {
-  return username === getAdminUsername() && password === getAdminPassword();
+export function validateAdminCredentials(identifier: string, password: string) {
+  const passwordMatch = password === getAdminPassword();
+  if (!passwordMatch) return false;
+
+  // Allow login with username
+  if (identifier === getAdminUsername()) return true;
+
+  // Allow login with email (if ADMIN_EMAIL is set)
+  const adminEmail = getAdminEmail();
+  if (adminEmail && identifier.toLowerCase() === adminEmail.toLowerCase()) return true;
+
+  return false;
 }
 
 export async function createAdminSession(username: string) {
   const cookieStore = await cookies();
-  cookieStore.set(ADMIN_COOKIE, createSessionToken(username), {
+  cookieStore.set(ADMIN_COOKIE, createSessionToken(getAdminUsername()), {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',

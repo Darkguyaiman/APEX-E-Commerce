@@ -14,18 +14,23 @@ export default function ShopPage() {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('ALL'); // ALL, men, women, kit
   const [searchQuery, setSearchQuery] = useState('');
+  const [categories, setCategories] = useState<{ id: number; name: string; slug: string }[]>([]);
 
   useEffect(() => {
     Promise.all([
       fetch('/api/products').then((res) => res.json()),
-      fetch('/api/shop-hero').then((res) => res.json()).catch(() => null)
+      fetch('/api/shop-hero').then((res) => res.json()).catch(() => null),
+      fetch('/api/categories').then((res) => res.json()).catch(() => [])
     ])
-      .then(([productsData, heroData]) => {
+      .then(([productsData, heroData, categoriesData]) => {
         if (Array.isArray(productsData)) {
           setProducts(productsData);
         }
         if (heroData && typeof heroData.productId === 'number') {
           setHeroProductId(heroData.productId);
+        }
+        if (Array.isArray(categoriesData)) {
+          setCategories(categoriesData);
         }
         setLoading(false);
       })
@@ -124,25 +129,37 @@ export default function ShopPage() {
         {/* Filter Toolbar */}
         <div className="border-y border-white/10 py-6 mb-12 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-2">
-            {[
-              ['ALL', 'ALL GEAR'],
-              ['men', "MEN'S BOOTS"],
-              ['women', "WOMEN'S BOOTS"],
-              ['kit', 'KITS & EQUIPMENT']
-            ].map(([catVal, label]) => (
+            <button
+              onClick={() => {
+                setActiveCategory('ALL');
+                setSearchQuery('');
+              }}
+              className={`px-5 py-2.5 border transition-all font-label-caps text-xs cursor-pointer ${
+                activeCategory === 'ALL'
+                  ? 'border-primary-container bg-primary-container text-black font-black'
+                  : 'border-white/10 text-on-surface-variant hover:border-white/30'
+              }`}
+            >
+              ALL GEAR
+            </button>
+            {categories.map((cat) => (
               <button
-                key={catVal}
+                key={cat.id}
                 onClick={() => {
-                  setActiveCategory(catVal);
+                  setActiveCategory(cat.slug);
                   setSearchQuery('');
                 }}
                 className={`px-5 py-2.5 border transition-all font-label-caps text-xs cursor-pointer ${
-                  activeCategory === catVal
+                  activeCategory === cat.slug
                     ? 'border-primary-container bg-primary-container text-black font-black'
                     : 'border-white/10 text-on-surface-variant hover:border-white/30'
                 }`}
               >
-                {label}
+                {cat.slug === 'men' || cat.slug === 'women'
+                  ? `${cat.name.toUpperCase()}'S BOOTS`
+                  : cat.slug === 'kit'
+                    ? 'KITS & EQUIPMENT'
+                    : `${cat.name.toUpperCase()} GEAR`}
               </button>
             ))}
           </div>
