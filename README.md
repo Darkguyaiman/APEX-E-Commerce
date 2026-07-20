@@ -13,6 +13,7 @@ Apex is a production-oriented football accessories ecommerce storefront built wi
 - [Local Development](#local-development)
 - [Database Setup](#database-setup)
 - [Production Build](#production-build)
+- [Production Infrastructure](#production-infrastructure)
 - [Project Structure](#project-structure)
 - [Operational Notes](#operational-notes)
 - [Quality Checks](#quality-checks)
@@ -32,6 +33,8 @@ Apex is a production-oriented football accessories ecommerce storefront built wi
 ```mermaid
 flowchart TD
     Browser[Browser / PWA Client]
+    Cloudflare[Cloudflare Proxy and Security]
+    Nginx[Nginx Reverse Proxy / Load Balancer]
     App[Next.js App Router]
     UI[React Components]
     API[Route Handlers and Server Actions]
@@ -41,7 +44,9 @@ flowchart TD
     OAuth[Google OAuth]
     Public[Self-hosted Assets in public/]
 
-    Browser --> App
+    Browser --> Cloudflare
+    Cloudflare --> Nginx
+    Nginx --> App
     App --> UI
     UI --> API
     API --> Auth
@@ -189,6 +194,35 @@ Before deploying, confirm that:
 - SMTP is configured if email verification is required.
 - `NEXT_PUBLIC_APP_URL` points to the deployed origin.
 - Upload and public asset paths are compatible with the hosting platform.
+
+## Production Infrastructure
+
+The production site is served at [https://apex.yourbackpack.tech](https://apex.yourbackpack.tech).
+
+Traffic is routed through Cloudflare with proxying enabled. Cloudflare acts as the public edge for DNS, TLS, and baseline security controls, while hiding the real origin server IP address from normal public DNS lookups. This reduces direct exposure of the Hostinger servers and ensures requests reach the infrastructure through the Cloudflare edge instead of directly targeting the origin.
+
+Behind Cloudflare, Nginx is used as the reverse proxy and load balancer. Nginx terminates and routes inbound application traffic to the app server, while keeping the deployment layout flexible for scaling, maintenance, and controlled upstream routing.
+
+The deployment uses two Hostinger KVM 1 VPS plans:
+
+- App server: runs the Next.js application runtime behind Nginx.
+- Database server: runs MySQL behind Nginx-controlled internal routing and firewall rules.
+
+```mermaid
+flowchart LR
+    User[User Browser]
+    Cloudflare[Cloudflare Proxy / Security Edge]
+    NginxApp[Nginx on App VPS]
+    App[Next.js App Server]
+    NginxDb[Nginx / Controlled Access on DB VPS]
+    MySQL[(MySQL Database)]
+
+    User -->|apex.yourbackpack.tech| Cloudflare
+    Cloudflare --> NginxApp
+    NginxApp --> App
+    App --> NginxDb
+    NginxDb --> MySQL
+```
 
 ## Project Structure
 
