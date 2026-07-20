@@ -5,6 +5,7 @@ Apex is a production-oriented football accessories ecommerce storefront built wi
 ## Table of Contents
 
 - [Features](#features)
+- [Market and UX Rationale](#market-and-ux-rationale)
 - [Architecture](#architecture)
 - [Data Flow](#data-flow)
 - [Tech Stack](#tech-stack)
@@ -27,6 +28,40 @@ Apex is a production-oriented football accessories ecommerce storefront built wi
 - Admin console for products, categories, orders, promo codes, testimonials, memberships, and messages.
 - Raw MySQL access through `mysql2` with transactional order writes and no ORM dependency.
 - PWA assets, manifest, service worker registration, local fonts, and self-hosted image assets.
+
+## Market and UX Rationale
+
+Apex focuses on football accessories because the category has a clear demand base, repeat purchase potential, and strong fit with technical ecommerce presentation. Football equipment spans performance footwear, apparel, protective gear, balls, and training products, which gives the shop room to sell both high-value hero products and lower-friction add-ons.
+
+The business case is supported by market research:
+
+- Football equipment is a multi-billion-dollar category. TechSci Research estimates the global football equipment market will grow from USD 18.01 billion in 2025 to USD 22.85 billion by 2031 at a 4.05% CAGR. Persistence Market Research projects USD 19.4 billion in 2026 rising to USD 25.0 billion by 2033 at a 3.7% CAGR.
+- Broader sporting goods demand is also expanding. McKinsey forecasts global sporting goods industry growth around 6% for 2024-2029, while Mordor Intelligence projects the sporting goods market to reach USD 151.43 billion by 2031 at a 6.11% CAGR.
+- The audience is large and global. FIFA's Big Count reported 265 million football players worldwide, and FIFA's women's football reporting shows continued institutional investment in participation growth, including youth competitions growing from 1,717 in 2019 to 4,743 in 2023.
+- Ecommerce is a strong channel for this product type. Sporting goods ecommerce benefits from comparison shopping, mobile browsing, direct-to-consumer brand behavior, and product detail pages that can communicate fit, material, size, and performance differences before purchase.
+
+These findings shaped the app's business and UX decisions:
+
+- Product strategy: the catalog combines premium boots, training kit, and accessories so customers can compare technical products while also discovering add-on items with lower purchase resistance.
+- Visual positioning: the high-contrast interface, bold typography, and performance-focused imagery are designed to make Apex feel like a technical football shop rather than a generic marketplace.
+- Product detail UX: product pages emphasize images, specifications, sizing, traction, colorway, tags, FAQs, and media because football shoppers need confidence around fit and performance before checkout.
+- Conversion UX: cart, checkout, promo codes, order tracking, and account history reduce friction across the buying flow and support repeat orders.
+- Trust UX: customer authentication, email verification, admin-managed catalog data, testimonials, and visible policy pages strengthen credibility.
+- Mobile and PWA UX: responsive layouts, installable app behavior, local assets, and focused navigation support customers who browse from phones before or after training sessions.
+- Admin UX: dense CRUD screens for products, categories, promos, testimonials, messages, memberships, and orders keep shop operations fast without needing a separate back-office tool.
+
+UX choices were also informed by ecommerce usability research. Baymard Institute's product-page benchmark reports that many ecommerce product pages still perform at a mediocre level, especially on mobile, which makes strong product information architecture and mobile-first purchase flows a competitive advantage. Baymard's mobile ecommerce research also highlights the complexity of small-screen shopping behavior, supporting Apex's emphasis on compact navigation, clear product cards, responsive checkout, and persistent cart access.
+
+Sources:
+
+- [TechSci Research: Football Equipment Market](https://www.techsciresearch.com/report/football-equipment-market/23209.html)
+- [Persistence Market Research: Football Equipment Market](https://www.persistencemarketresearch.com/market-research/football-equipment-market.asp)
+- [McKinsey: Sporting Goods Industry Trends 2025](https://www.mckinsey.com/industries/retail/our-insights/sporting-goods-industry-trends)
+- [Mordor Intelligence: Sporting Goods Market](https://www.mordorintelligence.com/industry-reports/sporting-goods-market)
+- [FIFA Big Count: 265 Million Playing Football](https://condorperformance.com/wp-content/uploads/2020/02/emaga_9384_10704.pdf)
+- [FIFA Member Associations Survey Report: Women's Football](https://inside.fifa.com/womens-football/member-associations-survey-report-2023)
+- [Baymard Institute: Product Page UX Best Practices](https://baymard.com/blog/current-state-ecommerce-product-page-ux)
+- [Baymard Institute: Mobile Ecommerce Usability](https://baymard.com/research/mcommerce-usability)
 
 ## Architecture
 
