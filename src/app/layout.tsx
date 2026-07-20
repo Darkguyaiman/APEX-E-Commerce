@@ -8,7 +8,7 @@ import LayoutContent from '@/components/LayoutContent';
 import PWARegistration from '@/components/PWARegistration';
 
 export const metadata: Metadata = {
-  title: 'Apex | Elite Football Gear',
+  title: 'Apex',
   description: 'Building the future of athletic performance through precision engineering and data-driven design. Engineered for the elite.',
   icons: {
     icon: [

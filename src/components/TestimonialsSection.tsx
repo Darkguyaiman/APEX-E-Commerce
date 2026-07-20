@@ -88,7 +88,7 @@ export default function TestimonialsSection() {
           </h3>
         </div>
         <p className="max-w-md text-sm leading-relaxed text-on-surface-variant">
-          Feedback from players putting Apex gear through match pace, training load, and bad-weather sessions.
+          Feedback from players putting Apex products through match pace, training load, and bad-weather sessions.
         </p>
       </div>
 

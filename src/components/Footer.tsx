@@ -156,7 +156,7 @@ const Footer: React.FC = () => {
         </div>
       </div>
       <div className="mt-20 pt-8 border-t border-primary/10 flex justify-between items-center text-on-surface-variant font-bold font-label-caps text-[10px]">
-        <span>© {new Date().getFullYear()} APEX PERFORMANCE. ALL RIGHTS RESERVED.</span>
+        <span>&copy; {new Date().getFullYear()} APEX. ALL RIGHTS RESERVED.</span>
         <div className="flex gap-8">
           <Link href="/privacy-policy" className="hover:text-primary cursor-pointer transition-colors">PRIVACY POLICY</Link>
           <Link href="/terms-of-service" className="hover:text-primary cursor-pointer transition-colors">TERMS OF SERVICE</Link>

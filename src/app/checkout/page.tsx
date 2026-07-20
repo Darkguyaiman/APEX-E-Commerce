@@ -300,7 +300,7 @@ export default function CheckoutPage() {
               DEPLOYMENT CONFIRMED
             </h3>
             <p className="font-body-md text-sm text-on-surface-variant/80 max-w-xs mx-auto leading-relaxed">
-              Your Apex performance profile has been logged on the database grid.
+              Your Apex profile has been logged on the database grid.
             </p>
             <div className="bg-surface-container border border-white/5 p-4 rounded-sm">
               <p className="font-label-caps text-xs text-primary font-bold">
@@ -859,7 +859,7 @@ export default function CheckoutPage() {
                 Syncing Gear
               </h3>
               <p className="font-body-md text-xs text-on-surface-variant/80 leading-relaxed">
-                Synchronizing your performance profile with the Apex grid. Do not disconnect.
+                Synchronizing your profile with the Apex grid. Do not disconnect.
               </p>
             </div>
             <div className="flex justify-center gap-1.5">

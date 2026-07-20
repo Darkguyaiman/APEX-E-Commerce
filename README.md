@@ -1,6 +1,6 @@
-# Apex Performance Gear
+# Apex: The Football Accessories E-Commerce Shop
 
-Apex Performance Gear is a production-oriented football equipment storefront built with Next.js, TypeScript, Tailwind CSS v4, MySQL, and a full admin console. It supports catalog browsing, product detail pages, cart and checkout flows, customer authentication, Google OAuth, promo codes, order tracking, memberships, testimonials, and contact messages.
+Apex is a production-oriented football accessories ecommerce storefront built with Next.js, TypeScript, Tailwind CSS v4, MySQL, and a full admin console. It supports catalog browsing, product detail pages, cart and checkout flows, customer authentication, Google OAuth, promo codes, order tracking, memberships, testimonials, and contact messages.
 
 ## Table of Contents
 
