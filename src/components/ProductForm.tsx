@@ -19,6 +19,8 @@ type ProductFormState = {
   description: string;
   type_chip: string;
   tags: string;
+  requires_size: boolean;
+  size_options: string;
 };
 
 const emptyProductForm: ProductFormState = {
@@ -32,7 +34,9 @@ const emptyProductForm: ProductFormState = {
   traction_type: 'FG',
   description: '',
   type_chip: '',
-  tags: ''
+  tags: '',
+  requires_size: true,
+  size_options: ''
 };
 
 function productToForm(product: Product): ProductFormState {
@@ -48,7 +52,9 @@ function productToForm(product: Product): ProductFormState {
     traction_type: product.traction_type,
     description: product.description,
     type_chip: product.type_chip || '',
-    tags: product.tags || ''
+    tags: product.tags || '',
+    requires_size: product.requires_size === undefined || product.requires_size === null ? true : Boolean(product.requires_size),
+    size_options: product.size_options || ''
   };
 }
 
@@ -106,7 +112,7 @@ export default function ProductForm({ initialProduct }: ProductFormProps) {
     setFaqs(prev => [...prev, { title: '', description: '', badges: [] }]);
   };
 
-  const handleFaqChange = (index: number, key: 'title' | 'description' | 'badges', value: any) => {
+  const handleFaqChange = (index: number, key: 'title' | 'description' | 'badges', value: string) => {
     setFaqs(prev => {
       const updated = [...prev];
       if (key === 'badges') {
@@ -236,8 +242,8 @@ export default function ProductForm({ initialProduct }: ProductFormProps) {
           const isMain = prev.length === 0;
           return [...prev, { image_url: data.url, is_main: isMain }];
         });
-      } catch (err: any) {
-        setUploadError(`Failed to upload ${file.name}: ${err.message}`);
+      } catch (err: unknown) {
+        setUploadError(`Failed to upload ${file.name}: ${err instanceof Error ? err.message : 'Upload failed'}`);
       }
     }
   };
@@ -279,7 +285,7 @@ export default function ProductForm({ initialProduct }: ProductFormProps) {
     
     // Check if main image is selected
     const hasMain = images.some(img => img.is_main);
-    let finalImages = [...images];
+    const finalImages = [...images];
     if (!hasMain && finalImages.length > 0) {
       finalImages[0].is_main = true;
     }
@@ -302,6 +308,8 @@ export default function ProductForm({ initialProduct }: ProductFormProps) {
           image_url: mainImageUrl,
           price: Number(productForm.price),
           original_price: productForm.original_price ? Number(productForm.original_price) : null,
+          requires_size: productForm.requires_size,
+          size_options: productForm.size_options ? productForm.size_options : null,
           images: finalImages,
           faqs: JSON.stringify(faqs),
           videos: videos
@@ -468,6 +476,34 @@ export default function ProductForm({ initialProduct }: ProductFormProps) {
           <span className={labelClass}>Tags</span>
           <input className={fieldClass} value={productForm.tags} onChange={(event) => updateProductField('tags', event.target.value)} placeholder="CARBON SOLE,FG" />
         </label>
+        <label className="flex items-start gap-3 border border-white/10 bg-surface-container/30 p-4 md:col-span-2">
+          <input
+            type="checkbox"
+            checked={productForm.requires_size}
+            onChange={(event) => setProductForm((currentForm) => ({ ...currentForm, requires_size: event.target.checked }))}
+            className="mt-1 h-4 w-4 accent-primary-container"
+          />
+          <span>
+            <span className={labelClass}>Requires size selection</span>
+            <span className="mt-1 block text-xs leading-relaxed text-on-surface-variant/75">
+              Keep this on for boots and footwear. Turn it off for one-size products so customers can add them directly from the shop.
+            </span>
+          </span>
+        </label>
+        {productForm.requires_size && (
+          <label className="space-y-2 md:col-span-2">
+            <span className={labelClass}>Size Options</span>
+            <input
+              className={fieldClass}
+              value={productForm.size_options}
+              onChange={(event) => updateProductField('size_options', event.target.value)}
+              placeholder="Leave blank for boot sizes, or enter XS,S,M,L,XL"
+            />
+            <span className="block text-xs leading-relaxed text-on-surface-variant/70">
+              Use comma-separated values. Example for shirts: XS,S,M,L,XL.
+            </span>
+          </label>
+        )}
         {/* FAQs / Tech Fold Accordion Editor */}
         <div className="space-y-4 md:col-span-2 border-t border-white/10 pt-6 mt-4">
           <div className="flex items-center justify-between">

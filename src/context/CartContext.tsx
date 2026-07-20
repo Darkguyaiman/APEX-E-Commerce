@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 export interface CartItem {
   id: number;
@@ -56,11 +56,25 @@ function loadStoredCart(): CartItem[] {
 }
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cart, setCart] = useState<CartItem[]>(loadStoredCart);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const hasLoadedStoredCart = useRef(false);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setCart((currentCart) => {
+        if (currentCart.length > 0) return currentCart;
+        return loadStoredCart();
+      });
+      hasLoadedStoredCart.current = true;
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   // Save cart to LocalStorage on changes
   useEffect(() => {
+    if (!hasLoadedStoredCart.current) return;
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   }, [cart]);
 

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Category } from '@/lib/db';
 
 interface CategoryListTableProps {
@@ -35,8 +36,8 @@ export default function CategoryListTable({ initialCategories }: CategoryListTab
       }
 
       setCategories(prev => prev.filter(c => c.id !== id));
-    } catch (err: any) {
-      alert(err.message || 'Could not delete category');
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Could not delete category');
     } finally {
       setDeletingId(null);
     }
@@ -59,6 +60,7 @@ export default function CategoryListTable({ initialCategories }: CategoryListTab
           <thead>
             <tr className="border-b border-white/10 bg-surface-container-lowest font-label-caps text-[10px] text-on-surface-variant tracking-wider uppercase">
               <th className="px-6 py-4">ID</th>
+              <th className="px-6 py-4">Image</th>
               <th className="px-6 py-4">Category Name</th>
               <th className="px-6 py-4">Slug</th>
               <th className="px-6 py-4 text-right">Actions</th>
@@ -67,7 +69,7 @@ export default function CategoryListTable({ initialCategories }: CategoryListTab
           <tbody className="divide-y divide-white/5">
             {categories.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-10 text-center text-on-surface-variant">
+                <td colSpan={5} className="px-6 py-10 text-center text-on-surface-variant">
                   No categories found.
                 </td>
               </tr>
@@ -76,6 +78,22 @@ export default function CategoryListTable({ initialCategories }: CategoryListTab
                 <tr key={cat.id} className="hover:bg-white/[0.02] transition-colors">
                   <td className="px-6 py-4 font-mono text-xs text-on-surface-variant/50">
                     {cat.id}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="relative h-16 w-12 overflow-hidden border border-white/10 bg-black">
+                      {cat.image_url ? (
+                        <Image
+                          src={cat.image_url}
+                          alt={`${cat.name} category`}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-on-surface-variant/40">
+                          <span className="material-symbols-outlined text-base">image</span>
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <span className="block font-headline-md text-xl uppercase italic leading-none text-primary">

@@ -3,6 +3,14 @@ import { type ProductInput, updateProduct, deleteProduct } from '@/lib/db';
 import { isAdminRequest } from '@/lib/adminAuth';
 
 type ProductPayload = Record<string, unknown>;
+type ProductImagePayload = {
+  image_url?: unknown;
+  is_main?: unknown;
+};
+type ProductVideoPayload = {
+  title?: unknown;
+  video_url?: unknown;
+};
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Internal server error';
@@ -40,14 +48,14 @@ function parseProductPayload(payload: ProductPayload): ProductInput {
   }
 
   const images = Array.isArray(payload.images)
-    ? payload.images.map((img: any) => ({
+    ? (payload.images as ProductImagePayload[]).map((img) => ({
         image_url: String(img.image_url).trim(),
         is_main: Boolean(img.is_main)
       }))
     : undefined;
 
   const videos = Array.isArray(payload.videos)
-    ? payload.videos.map((vid: any) => ({
+    ? (payload.videos as ProductVideoPayload[]).map((vid) => ({
         title: String(vid.title).trim(),
         video_url: String(vid.video_url).trim()
       }))
@@ -66,6 +74,8 @@ function parseProductPayload(payload: ProductPayload): ProductInput {
     description: String(payload.description).trim(),
     type_chip: payload.type_chip ? String(payload.type_chip).trim() : null,
     tags: payload.tags ? String(payload.tags).trim() : null,
+    requires_size: payload.requires_size === undefined ? true : Boolean(payload.requires_size),
+    size_options: payload.size_options ? String(payload.size_options).trim() : null,
     images,
     faqs: payload.faqs ? String(payload.faqs).trim() : null,
     videos

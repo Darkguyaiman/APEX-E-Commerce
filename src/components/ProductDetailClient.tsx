@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useLenis } from 'lenis/react';
 import { Product } from '@/lib/db';
 import { useCart } from '@/context/CartContext';
 
@@ -23,6 +24,17 @@ const SHOE_SIZES = [
   { size: '11', inStock: true },
   { size: '12', inStock: false }
 ];
+
+function getProductSizes(product: Product) {
+  const customSizes = product.size_options
+    ?.split(',')
+    .map((size) => size.trim())
+    .filter(Boolean);
+
+  return customSizes && customSizes.length > 0
+    ? customSizes.map((size) => ({ size, inStock: true, custom: true }))
+    : SHOE_SIZES.map((option) => ({ ...option, custom: false }));
+}
 
 interface TechDetail {
   title: string;
@@ -90,19 +102,37 @@ const PRODUCT_TECH_DETAILS: { [slug: string]: TechDetail[] } = {
 
 const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitProducts }) => {
   const { addToCart } = useCart();
+  const lenis = useLenis();
   const [selectedSize, setSelectedSize] = useState('8.5');
   const [scrollY, setScrollY] = useState(0);
   const [addedMain, setAddedMain] = useState(false);
   const [addedKits, setAddedKits] = useState<{ [id: number]: boolean }>({});
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [imageSelection, setImageSelection] = useState({
+    productSlug: product.slug,
+    index: 0
+  });
 
   const imagesList = product.images && product.images.length > 0
     ? product.images
     : [{ image_url: product.image_url, is_main: true }];
 
   useEffect(() => {
-    setCurrentImageIndex(0);
-  }, [product.image_url]);
+    window.scrollTo(0, 0);
+    lenis?.scrollTo(0, { immediate: true, force: true });
+  }, [lenis, product.slug]);
+
+  const currentImageIndex = imageSelection.productSlug === product.slug ? imageSelection.index : 0;
+  const setCurrentImageIndex = (nextIndex: number | ((previousIndex: number) => number)) => {
+    setImageSelection((selection) => {
+      const previousIndex = selection.productSlug === product.slug ? selection.index : 0;
+      const index = typeof nextIndex === 'function' ? nextIndex(previousIndex) : nextIndex;
+
+      return {
+        productSlug: product.slug,
+        index
+      };
+    });
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -112,8 +142,16 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const requiresSize = product.requires_size === undefined || product.requires_size === null
+    ? true
+    : Boolean(product.requires_size);
+  const sizeOptions = getProductSizes(product);
+  const selectedCartSize = sizeOptions.some((option) => option.size === selectedSize && option.inStock)
+    ? selectedSize
+    : sizeOptions.find((option) => option.inStock)?.size || selectedSize;
+
   const handleAddMainToCart = () => {
-    addToCart(product, selectedSize);
+    addToCart(product, requiresSize ? selectedCartSize : 'ONE SIZE');
     setAddedMain(true);
     setTimeout(() => setAddedMain(false), 2000);
   };
@@ -228,7 +266,8 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
             alt={product.name} 
             fill
             priority
-            className="object-cover object-center transition-all duration-300"
+            sizes="100vw"
+            className="object-contain object-center p-6 transition-all duration-300 md:p-10"
           />
         </div>
 
@@ -270,7 +309,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
                 key={idx}
                 onClick={() => setCurrentImageIndex(idx)}
                 className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
-                  currentImageIndex === idx ? 'bg-primary-container w-5' : 'bg-white/30 hover:bg-white/60'
+                  currentImageIndex === idx ? 'bg-primary-container w-5' : 'bg-primary/35 hover:bg-primary/65'
                 }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
@@ -329,7 +368,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
           <div className="flex justify-between items-baseline border-b border-white/10 pb-4">
             <div>
               <span className="font-label-caps text-[9px] text-on-surface-variant/50 block mb-1">MSRP LOCK</span>
-              <h2 className="font-headline-lg text-secondary-container text-4xl font-bold italic tracking-normal">
+              <h2 className="font-headline-lg text-primary text-4xl font-bold italic tracking-normal">
                 RM {msrp.toFixed(2)}
               </h2>
             </div>
@@ -342,6 +381,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
           </div>
 
           {/* Size picker */}
+          {requiresSize && (
           <div>
             <div className="flex justify-between items-center mb-4 select-none">
               <h3 className="font-label-caps text-xs text-primary font-bold tracking-wider">
@@ -356,21 +396,21 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
             </div>
             
             <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-              {SHOE_SIZES.map(({ size, inStock }) => {
+              {sizeOptions.map(({ size, inStock, custom }) => {
                 if (!inStock) {
                   return (
                     <button
                       key={size}
                       disabled
-                      className="h-12 flex items-center justify-center bg-surface-container-low/30 font-label-caps text-xs text-on-surface-variant/20 cursor-not-allowed relative overflow-hidden select-none"
+                      className="h-12 flex items-center justify-center border border-primary/10 bg-surface-container-low font-label-caps text-xs text-on-surface-variant/55 cursor-not-allowed relative overflow-hidden select-none"
                     >
                       {size}
-                      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-error/10 to-transparent rotate-45"></div>
+                      <div className="absolute left-1/2 top-1/2 h-px w-16 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-secondary"></div>
                     </button>
                   );
                 }
                 
-                const isSelected = selectedSize === size;
+                const isSelected = selectedCartSize === size;
                 return (
                   <button
                     key={size}
@@ -381,12 +421,13 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
                         : 'text-primary hover:bg-primary-container hover:text-black hover:border-transparent'
                     }`}
                   >
-                    {size}
+                    {custom ? size : size}
                   </button>
                 );
               })}
             </div>
           </div>
+          )}
 
           {/* Specs sheet */}
           <div className="grid grid-cols-2 gap-4">
@@ -526,7 +567,7 @@ const ProductDetailClient: React.FC<ProductDetailClientProps> = ({ product, kitP
                     </h4>
                   </div>
                   
-                  <p className="text-secondary-container font-stats-value text-base mt-2">
+                  <p className="text-secondary font-stats-value text-base mt-2">
                     RM {Number(kitItem.price).toFixed(2)}
                   </p>
                 </div>

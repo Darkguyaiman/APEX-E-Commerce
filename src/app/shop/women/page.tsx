@@ -93,7 +93,7 @@ export default function WomenShop() {
               <div className="flex flex-wrap gap-4 pt-4">
                 <button
                   onClick={() => addToCart(heroProduct, '8.5')}
-                  className="bg-primary-container text-black font-headline-md text-base px-10 py-4 flex items-center gap-2 group hover:brightness-110 transition-all active:scale-95 cursor-pointer"
+                  className="bg-primary-container text-on-primary-container font-headline-md text-base px-10 py-4 flex items-center gap-2 group hover:brightness-110 transition-all active:scale-95 cursor-pointer"
                 >
                   SHOP THE LINE
                   <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform font-bold">
@@ -140,7 +140,7 @@ export default function WomenShop() {
                   onClick={() => setActiveFilter('ALL')}
                   className={`px-6 py-2 rounded-full font-label-caps text-[10px] transition-all cursor-pointer ${
                     activeFilter === 'ALL'
-                      ? 'bg-primary-container text-black font-bold'
+                      ? 'bg-primary-container text-on-primary-container font-bold'
                       : 'text-on-surface-variant/70 hover:text-white'
                   }`}
                 >
@@ -150,7 +150,7 @@ export default function WomenShop() {
                   onClick={() => setActiveFilter('FG')}
                   className={`px-6 py-2 rounded-full font-label-caps text-[10px] transition-all cursor-pointer ${
                     activeFilter === 'FG'
-                      ? 'bg-primary-container text-black font-bold'
+                      ? 'bg-primary-container text-on-primary-container font-bold'
                       : 'text-on-surface-variant/70 hover:text-white'
                   }`}
                 >
@@ -160,7 +160,7 @@ export default function WomenShop() {
                   onClick={() => setActiveFilter('SG')}
                   className={`px-6 py-2 rounded-full font-label-caps text-[10px] transition-all cursor-pointer ${
                     activeFilter === 'SG'
-                      ? 'bg-primary-container text-black font-bold'
+                      ? 'bg-primary-container text-on-primary-container font-bold'
                       : 'text-on-surface-variant/70 hover:text-white'
                   }`}
                 >

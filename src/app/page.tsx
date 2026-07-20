@@ -4,9 +4,32 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import TestimonialsSection from '@/components/TestimonialsSection';
+import type { Category } from '@/lib/db';
+
+const fallbackCategoryCards: Category[] = [
+  { id: 1, name: 'Men', slug: 'men', image_url: '/images/collection-mens.jpg' },
+  { id: 2, name: 'Women', slug: 'women', image_url: '/images/collection-womens.jpg' },
+  { id: 3, name: 'Kit', slug: 'kit', image_url: '/images/collection-speedlab.jpg' }
+];
+
+function getCategoryHref(slug: string) {
+  if (slug === 'men' || slug === 'women') {
+    return `/shop/${slug}`;
+  }
+
+  return `/shop?category=${encodeURIComponent(slug)}`;
+}
+
+function getCategoryLabel(category: Category) {
+  if (category.slug === 'men') return 'PREMIUM RANGE';
+  if (category.slug === 'women') return 'ELITE FIT';
+  if (category.slug === 'kit') return 'MATCH READY';
+  return 'PRODUCT CATEGORY';
+}
 
 export default function Home() {
   const [scrollY, setScrollY] = useState(0);
+  const [categoryCards, setCategoryCards] = useState<Category[]>(fallbackCategoryCards);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -14,6 +37,27 @@ export default function Home() {
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/categories')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setCategoryCards(
+            data
+              .filter((category: Category) => category.slug && category.name)
+              .slice(0, 3)
+              .map((category: Category, index: number) => ({
+                ...category,
+                image_url: category.image_url || fallbackCategoryCards[index]?.image_url || '/images/product/ghost.png'
+              }))
+          );
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to load home category cards:', error);
+      });
   }, []);
 
   return (
@@ -38,10 +82,10 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 text-center px-margin-mobile flex flex-col items-center">
-          <h2 className="font-display-hero text-[52px] sm:text-7xl md:text-8xl text-primary uppercase italic font-black tracking-wide leading-none animate-fade-in-up">
+          <h2 className="font-display-hero text-[52px] sm:text-7xl md:text-8xl text-white uppercase italic font-black tracking-wide leading-none drop-shadow-[0_3px_18px_rgba(0,0,0,0.55)] animate-fade-in-up">
             EVOLVE YOUR GAME
           </h2>
-          <p className="font-headline-md text-base sm:text-xl md:text-2xl text-primary/80 mt-4 max-w-2xl mx-auto uppercase tracking-wide leading-relaxed animate-fade-in-up delay-200">
+          <p className="font-headline-md text-base sm:text-xl md:text-2xl text-white/85 mt-4 max-w-2xl mx-auto uppercase tracking-wide leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)] animate-fade-in-up delay-200">
             ENGINEERED FOR THE ELITE. DESIGNED FOR THE FEARLESS.
           </p>
           <div className="mt-10 animate-fade-in-up delay-400">
@@ -58,10 +102,10 @@ export default function Home() {
         </div>
 
         <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 select-none">
-          <span className="font-label-caps text-[9px] sm:text-label-caps tracking-widest text-primary/60">
+          <span className="hero-scroll-cue-label font-label-caps text-[9px] sm:text-label-caps tracking-widest">
             SCROLL TO DISCOVER
           </span>
-          <span className="material-symbols-outlined animate-scroll-bounce text-primary-container text-2xl">
+          <span className="hero-scroll-cue-icon material-symbols-outlined animate-scroll-bounce text-2xl">
             expand_more
           </span>
         </div>
@@ -85,95 +129,33 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-          {/* ELITE MENS */}
-          <div className="group relative aspect-[3/4] overflow-hidden glass-card">
-            <Image 
-              src="/images/collection-mens.jpg" 
-              alt="Elite black and gold cleats on glowing pedestal" 
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20 opacity-80 group-hover:opacity-60 transition-opacity"></div>
-            <div className="absolute bottom-0 left-0 w-full p-8 flex flex-col justify-end h-full">
-              <span className="font-label-caps text-label-caps text-primary-container mb-2 inline-flex items-center gap-2 select-none">
-                <span className="w-2 h-2 bg-primary-container rounded-full animate-pulse"></span>
-                PREMIUM RANGE
-              </span>
-              <h4 className="font-headline-md text-2xl uppercase italic text-primary mb-4">
-                ELITE MENS
-              </h4>
-              <Link 
-                href="/shop/men"
-                className="bg-white text-black font-label-caps text-label-caps py-3 px-6 w-fit uppercase hover:bg-primary-container transition-colors select-none text-center"
-              >
-                EXPLORE LINE
-              </Link>
-            </div>
-          </div>
-
-          {/* PRO WOMENS */}
-          <div className="group relative aspect-[3/4] overflow-hidden glass-card">
-            <Image 
-              src="/images/collection-womens.jpg" 
-              alt="Women sports photography cleat" 
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20 opacity-80 group-hover:opacity-60 transition-opacity"></div>
-            <div className="absolute bottom-0 left-0 w-full p-8 flex flex-col justify-end h-full">
-              <span className="font-label-caps text-label-caps text-primary-container mb-2 inline-flex items-center gap-2 select-none">
-                <span className="w-2 h-2 bg-primary-container rounded-full"></span>
-                ELITE FIT
-              </span>
-              <h4 className="font-headline-md text-2xl uppercase italic text-primary mb-4">
-                PRO WOMENS
-              </h4>
-              <Link 
-                href="/shop/women"
-                className="bg-white text-black font-label-caps text-label-caps py-3 px-6 w-fit uppercase hover:bg-primary-container transition-colors select-none text-center"
-              >
-                VIEW COLLECTION
-              </Link>
-            </div>
-          </div>
-
-          {/* SPEED LAB */}
-          <div className="group relative aspect-[3/4] overflow-hidden glass-card">
-            <Image 
-              src="/images/collection-speedlab.jpg" 
-              alt="Neon lime and carbon fiber cleat design" 
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20 opacity-80 group-hover:opacity-60 transition-opacity"></div>
-            
-            {/* Spinning hover icon */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-              <div className="w-28 h-28 rounded-full border-2 border-primary-container/20 flex items-center justify-center">
-                <div className="w-20 h-20 rounded-full border border-primary-container/40 flex items-center justify-center animate-spin">
-                  <span className="material-symbols-outlined text-primary-container text-3xl font-bold">
-                    bolt
-                  </span>
-                </div>
+          {categoryCards.map((category, index) => (
+            <div key={category.id} className="group relative aspect-[3/4] overflow-hidden glass-card">
+              <Image
+                src={category.image_url || fallbackCategoryCards[index]?.image_url || '/images/product/ghost.png'}
+                alt={`${category.name} product category`}
+                fill
+                sizes="(min-width: 768px) 33vw, 100vw"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20 opacity-80 group-hover:opacity-60 transition-opacity"></div>
+              <div className="absolute bottom-0 left-0 w-full p-8 flex flex-col justify-end h-full">
+                <span className="font-label-caps text-label-caps text-[#c3f400] mb-2 inline-flex items-center gap-2 select-none">
+                  <span className={`w-2 h-2 bg-[#c3f400] rounded-full ${index === 0 ? 'animate-pulse' : ''}`}></span>
+                  {getCategoryLabel(category)}
+                </span>
+                <h4 className="font-headline-md text-2xl uppercase italic text-white mb-4">
+                  {category.name}
+                </h4>
+                <Link
+                  href={getCategoryHref(category.slug)}
+                  className="bg-white text-black font-label-caps text-label-caps py-3 px-6 w-fit uppercase hover:bg-[#c3f400] transition-colors select-none text-center"
+                >
+                  Explore Category
+                </Link>
               </div>
             </div>
-
-            <div className="absolute bottom-0 left-0 w-full p-8 flex flex-col justify-end h-full">
-              <span className="font-label-caps text-label-caps text-primary-container mb-2 inline-flex items-center gap-2 select-none">
-                <span className="w-2 h-2 bg-primary-container rounded-full"></span>
-                LAB TESTED
-              </span>
-              <h4 className="font-headline-md text-2xl uppercase italic text-primary mb-4">
-                SPEED LAB
-              </h4>
-              <Link 
-                href="/product/apex-gold-elite"
-                className="bg-white text-black font-label-caps text-label-caps py-3 px-6 w-fit uppercase hover:bg-primary-container transition-colors select-none text-center"
-              >
-                ENTER LAB
-              </Link>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 

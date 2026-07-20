@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="hidden md:block py-20 px-margin-desktop border-t border-white/5 bg-surface-container-lowest select-none">
+    <footer className="hidden md:block py-20 px-margin-desktop border-t border-primary/5 bg-surface-container-lowest select-none">
       <div className="max-w-container-max mx-auto grid grid-cols-4 gap-gutter">
         <div className="col-span-1">
           <div className="flex items-center gap-2.5 mb-6">
@@ -86,23 +86,18 @@ const Footer: React.FC = () => {
           <h5 className="font-label-caps text-label-caps text-primary mb-6">PRODUCTS</h5>
           <ul className="space-y-4 text-on-surface-variant font-body-md">
             <li>
-              <Link className="hover:text-primary-container transition-colors" href="/shop/men">
-                Men's Elite
+              <Link className="hover:text-primary-container transition-colors" href="/shop?category=men">
+                Men&apos;s Elite
               </Link>
             </li>
             <li>
-              <Link className="hover:text-primary-container transition-colors" href="/shop/women">
-                Women's Pro
+              <Link className="hover:text-primary-container transition-colors" href="/shop?category=women">
+                Women&apos;s Pro
               </Link>
             </li>
             <li>
-              <Link className="hover:text-primary-container transition-colors" href="/shop/men">
-                Kids Gear
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:text-primary-container transition-colors" href="/product/apex-gold-elite">
-                Limited Editions
+              <Link className="hover:text-primary-container transition-colors" href="/shop?category=kit">
+                Kits &amp; Equipment
               </Link>
             </li>
           </ul>
@@ -139,7 +134,7 @@ const Footer: React.FC = () => {
           </p>
           <form onSubmit={handleSubmit} className="flex gap-2">
             <input
-              className="bg-surface border border-white/10 px-4 py-2 font-label-caps text-label-caps w-full focus:outline-none focus:border-primary-container transition-all"
+              className="bg-surface-container-low border border-primary/10 text-primary placeholder:text-on-surface-variant/50 px-4 py-2 font-label-caps text-label-caps w-full focus:outline-none focus:border-primary-container transition-all"
               placeholder="EMAIL ADDRESS"
               type="email"
               value={email}
@@ -148,7 +143,7 @@ const Footer: React.FC = () => {
             />
             <button
               type="submit"
-              className="bg-primary text-black p-2 hover:bg-primary-container hover:text-black transition-colors flex items-center justify-center cursor-pointer"
+              className="bg-primary text-background p-2 hover:bg-primary-container hover:text-background transition-colors flex items-center justify-center cursor-pointer"
             >
               <span className="material-symbols-outlined">{subscribed ? 'check' : 'send'}</span>
             </button>
@@ -160,12 +155,12 @@ const Footer: React.FC = () => {
           )}
         </div>
       </div>
-      <div className="mt-20 pt-8 border-t border-white/5 flex justify-between items-center text-on-surface-variant/40 font-label-caps text-[10px]">
+      <div className="mt-20 pt-8 border-t border-primary/10 flex justify-between items-center text-on-surface-variant font-bold font-label-caps text-[10px]">
         <span>© {new Date().getFullYear()} APEX PERFORMANCE. ALL RIGHTS RESERVED.</span>
         <div className="flex gap-8">
-          <Link href="/privacy-policy" className="hover:text-primary cursor-pointer">PRIVACY POLICY</Link>
-          <Link href="/terms-of-service" className="hover:text-primary cursor-pointer">TERMS OF SERVICE</Link>
-          <Link href="/cookies" className="hover:text-primary cursor-pointer">COOKIES</Link>
+          <Link href="/privacy-policy" className="hover:text-primary cursor-pointer transition-colors">PRIVACY POLICY</Link>
+          <Link href="/terms-of-service" className="hover:text-primary cursor-pointer transition-colors">TERMS OF SERVICE</Link>
+          <Link href="/cookies" className="hover:text-primary cursor-pointer transition-colors">COOKIES</Link>
         </div>
       </div>
     </footer>

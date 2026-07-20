@@ -19,3 +19,5 @@ export default async function AdminTestimonialsPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

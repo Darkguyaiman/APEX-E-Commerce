@@ -21,7 +21,8 @@ DROP TABLE IF EXISTS promo_codes;
 CREATE TABLE categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    slug VARCHAR(255) NOT NULL UNIQUE
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    image_url VARCHAR(255) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 1. Create Products Table
@@ -39,6 +40,8 @@ CREATE TABLE products (
     description TEXT NOT NULL,
     type_chip VARCHAR(50) NULL, -- 'ELITE', 'LIMITED DROP', 'NEW ARRIVAL', etc.
     tags VARCHAR(255) NULL, -- Comma-separated tags, e.g., 'STABILITY CLAW,CARBON SOLE'
+    requires_size BOOLEAN NOT NULL DEFAULT TRUE,
+    size_options VARCHAR(255) NULL,
     faqs TEXT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -196,10 +199,10 @@ INSERT INTO site_settings (setting_key, setting_value) VALUES
 ('shop_hero_product_id', '1');
 
 -- 10. Seed Categories Data
-INSERT INTO categories (name, slug) VALUES 
-('Men', 'men'),
-('Women', 'women'),
-('Kit', 'kit');
+INSERT INTO categories (name, slug, image_url) VALUES
+('Men', 'men', '/images/collection-mens.jpg'),
+('Women', 'women', '/images/collection-womens.jpg'),
+('Kit', 'kit', '/images/collection-speedlab.jpg');
 
 -- 11. Create Membership Applications Table
 CREATE TABLE membership_applications (

@@ -1,20 +1,35 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
 import { Product } from '@/lib/db';
 import { useCart } from '@/context/CartContext';
 
-export default function ShopPage() {
+function ShopPageContent() {
   const { addToCart } = useCart();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [heroProductId, setHeroProductId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState('ALL'); // ALL, men, women, kit
   const [searchQuery, setSearchQuery] = useState('');
   const [categories, setCategories] = useState<{ id: number; name: string; slug: string }[]>([]);
+  const activeCategory = searchParams.get('category') || 'ALL'; // ALL, men, women, kit
+
+  const selectCategory = (category: string) => {
+    setSearchQuery('');
+
+    const url = new URL(window.location.href);
+    if (category === 'ALL') {
+      url.searchParams.delete('category');
+    } else {
+      url.searchParams.set('category', category);
+    }
+    router.replace(`${url.pathname}${url.search}${url.hash}`, { scroll: false });
+  };
 
   useEffect(() => {
     Promise.all([
@@ -60,19 +75,22 @@ export default function ShopPage() {
   });
 
   const heroProduct = products.find((p) => p.id === heroProductId) || products[0];
+  const categoryHeroProduct = activeCategory === 'ALL'
+    ? heroProduct
+    : products.find((p) => p.category === activeCategory) || heroProduct;
 
   return (
     <main className="pb-32 bg-background relative min-h-screen">
       {/* Carbon fiber grid overlay */}
       <div className="absolute inset-0 carbon-pattern opacity-5 pointer-events-none"></div>
 
-      {/* Featured Banner (only displayed when category is ALL or men) */}
-      {heroProduct && (activeCategory === 'ALL' || heroProduct.category === activeCategory) && (
-        <section className="relative w-full min-h-[60vh] flex items-end overflow-hidden mb-16 select-none animate-fade-in border-b border-white/5">
+      {/* Featured Banner (always displayed to prevent layout shifts when changing categories) */}
+      {categoryHeroProduct && (
+        <section className="relative min-h-[70vh] md:min-h-[85vh] flex items-end pt-32 pb-12 overflow-hidden border-b border-white/5 bg-surface-container-lowest">
           <div className="absolute inset-0 z-0">
             <Image
-              src={heroProduct.image_url}
-              alt={heroProduct.name}
+              src={categoryHeroProduct.image_url}
+              alt={categoryHeroProduct.name}
               fill
               priority
               sizes="100vw"
@@ -84,28 +102,28 @@ export default function ShopPage() {
 
           <div className="relative z-10 w-full px-margin-mobile md:px-margin-desktop pb-12 flex flex-col items-start max-w-container-max mx-auto">
             <div className="bg-primary-container px-3 py-1 mb-4 select-none">
-              <span className="font-label-caps text-[10px] text-black tracking-widest font-black uppercase">
+              <span className="font-label-caps text-[10px] text-on-primary-container tracking-widest font-black uppercase">
                 FEATURED PRO-CLEAT
               </span>
             </div>
             
             <h1 className="font-display-hero text-4xl sm:text-5xl md:text-7xl uppercase leading-none mb-4 italic tracking-wide text-primary">
-              {heroProduct.name.split(' ')[0]} {heroProduct.name.split(' ')[1]} <span className="text-primary-container">{heroProduct.name.split(' ').slice(2).join(' ')}</span>
+              {categoryHeroProduct.name.split(' ')[0]} {categoryHeroProduct.name.split(' ')[1]} <span className="text-primary-fixed">{categoryHeroProduct.name.split(' ').slice(2).join(' ')}</span>
             </h1>
             
             <p className="max-w-xl font-body-lg text-sm sm:text-base text-on-surface-variant leading-relaxed mb-6">
-              {heroProduct.description}
+              {categoryHeroProduct.description}
             </p>
             
             <div className="flex flex-wrap gap-4">
               <button
-                onClick={() => addToCart(heroProduct, '10.5')}
-                className="bg-primary-container hover:bg-white text-black px-6 py-3 font-label-caps text-xs font-black tracking-wider uppercase transition-colors active:scale-95 cursor-pointer"
+                onClick={() => addToCart(categoryHeroProduct, '10.5')}
+                className="bg-primary-container hover:bg-white text-on-primary-container hover:text-black px-6 py-3 font-label-caps text-xs font-black tracking-wider uppercase transition-colors active:scale-95 cursor-pointer"
               >
-                DEPLOY SIZE 10.5 — RM {heroProduct.price}
+                DEPLOY SIZE 10.5 — RM {categoryHeroProduct.price}
               </button>
               <Link
-                href={`/product/${heroProduct.slug}`}
+                href={`/product/${categoryHeroProduct.slug}`}
                 className="border border-white/10 hover:border-white/30 text-primary px-6 py-3 font-label-caps text-xs font-bold tracking-wider uppercase transition-colors"
               >
                 VIEW DETAILS
@@ -131,12 +149,11 @@ export default function ShopPage() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => {
-                setActiveCategory('ALL');
-                setSearchQuery('');
+                selectCategory('ALL');
               }}
               className={`px-5 py-2.5 border transition-all font-label-caps text-xs cursor-pointer ${
                 activeCategory === 'ALL'
-                  ? 'border-primary-container bg-primary-container text-black font-black'
+                  ? 'border-primary-container bg-primary-container text-on-primary-container font-black'
                   : 'border-white/10 text-on-surface-variant hover:border-white/30'
               }`}
             >
@@ -146,12 +163,11 @@ export default function ShopPage() {
               <button
                 key={cat.id}
                 onClick={() => {
-                  setActiveCategory(cat.slug);
-                  setSearchQuery('');
+                  selectCategory(cat.slug);
                 }}
                 className={`px-5 py-2.5 border transition-all font-label-caps text-xs cursor-pointer ${
                   activeCategory === cat.slug
-                    ? 'border-primary-container bg-primary-container text-black font-black'
+                    ? 'border-primary-container bg-primary-container text-on-primary-container font-black'
                     : 'border-white/10 text-on-surface-variant hover:border-white/30'
                 }`}
               >
@@ -212,5 +228,13 @@ export default function ShopPage() {
 
       </div>
     </main>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={null}>
+      <ShopPageContent />
+    </Suspense>
   );
 }

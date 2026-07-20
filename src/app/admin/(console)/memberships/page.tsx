@@ -19,3 +19,5 @@ export default async function AdminMembershipsPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

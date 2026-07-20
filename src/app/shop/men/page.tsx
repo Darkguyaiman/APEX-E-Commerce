@@ -73,7 +73,7 @@ export default function MenShop() {
             </div>
 
             <h1 className="font-display-hero text-5xl md:text-7xl uppercase leading-none mb-4 italic tracking-wide text-primary">
-              {heroProduct.name.split(' ')[0]} {heroProduct.name.split(' ')[1]} <span className="text-primary-container">{heroProduct.name.split(' ').slice(2).join(' ')}</span>
+              {heroProduct.name.split(' ')[0]} {heroProduct.name.split(' ')[1]} <span className="text-primary-fixed">{heroProduct.name.split(' ').slice(2).join(' ')}</span>
             </h1>
 
             <p className="max-w-xl font-body-lg text-base md:text-lg text-on-surface-variant leading-relaxed mb-8">
@@ -83,7 +83,7 @@ export default function MenShop() {
             <div className="flex flex-wrap gap-4">
               <button
                 onClick={() => addToCart(heroProduct, '10.5')}
-                className="bg-primary-container text-black px-8 py-4 font-label-caps text-sm font-bold flex items-center group transition-all active:scale-95 cursor-pointer"
+                className="bg-primary-container text-on-primary-container px-8 py-4 font-label-caps text-sm font-bold flex items-center group transition-all active:scale-95 cursor-pointer"
               >
                 DEPLOY VELOCITY
                 <span className="material-symbols-outlined ml-2 transition-transform group-hover:translate-x-2 font-bold">
@@ -111,7 +111,7 @@ export default function MenShop() {
             <button
               onClick={() => setActiveFilter('ALL')}
               className={`px-5 py-2 border-2 transition-all font-label-caps text-xs cursor-pointer ${activeFilter === 'ALL'
-                  ? 'border-primary-container bg-primary-container text-black font-bold'
+                  ? 'border-primary-container bg-primary-container text-on-primary-container font-bold'
                   : 'border-white/10 text-on-surface-variant hover:border-white/30'
                 }`}
             >
@@ -120,7 +120,7 @@ export default function MenShop() {
             <button
               onClick={() => setActiveFilter('SG')}
               className={`px-5 py-2 border-2 transition-all font-label-caps text-xs cursor-pointer ${activeFilter === 'SG'
-                  ? 'border-primary-container bg-primary-container text-black font-bold'
+                  ? 'border-primary-container bg-primary-container text-on-primary-container font-bold'
                   : 'border-white/10 text-on-surface-variant hover:border-white/30'
                 }`}
             >
@@ -129,7 +129,7 @@ export default function MenShop() {
             <button
               onClick={() => setActiveFilter('FG')}
               className={`px-5 py-2 border-2 transition-all font-label-caps text-xs cursor-pointer ${activeFilter === 'FG'
-                  ? 'border-primary-container bg-primary-container text-black font-bold'
+                  ? 'border-primary-container bg-primary-container text-on-primary-container font-bold'
                   : 'border-white/10 text-on-surface-variant hover:border-white/30'
                 }`}
             >
@@ -138,7 +138,7 @@ export default function MenShop() {
             <button
               onClick={() => setActiveFilter('TF')}
               className={`px-5 py-2 border-2 transition-all font-label-caps text-xs cursor-pointer ${activeFilter === 'TF'
-                  ? 'border-primary-container bg-primary-container text-black font-bold'
+                  ? 'border-primary-container bg-primary-container text-on-primary-container font-bold'
                   : 'border-white/10 text-on-surface-variant hover:border-white/30'
                 }`}
             >

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCategories, createCategory, type CategoryInput } from '@/lib/db';
 import { isAdminRequest } from '@/lib/adminAuth';
+import { revalidatePath } from 'next/cache';
 
 type CategoryPayload = Record<string, unknown>;
 
@@ -24,7 +25,11 @@ function parseCategoryPayload(payload: CategoryPayload): CategoryInput {
 
   return {
     name: String(payload.name).trim(),
-    slug
+    slug,
+    image_url:
+      payload.image_url === undefined || payload.image_url === null || String(payload.image_url).trim() === ''
+        ? null
+        : String(payload.image_url).trim()
   };
 }
 
@@ -47,6 +52,9 @@ export async function POST(request: Request) {
     const payload = await request.json() as CategoryPayload;
     const cat = parseCategoryPayload(payload);
     const created = await createCategory(cat);
+
+    revalidatePath('/admin/categories');
+    revalidatePath('/');
 
     return NextResponse.json(created, { status: 201 });
   } catch (e: unknown) {

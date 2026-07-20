@@ -3,24 +3,28 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Category } from '@/lib/db';
 
 type CategoryFormState = {
   id?: number;
   name: string;
   slug: string;
+  image_url: string;
 };
 
 const emptyCategoryForm: CategoryFormState = {
   name: '',
-  slug: ''
+  slug: '',
+  image_url: ''
 };
 
 function categoryToForm(cat: Category): CategoryFormState {
   return {
     id: cat.id,
     name: cat.name,
-    slug: cat.slug
+    slug: cat.slug,
+    image_url: cat.image_url || ''
   };
 }
 
@@ -37,8 +41,10 @@ export default function CategoryForm({ initialCategory }: CategoryFormProps) {
     initialCategory ? categoryToForm(initialCategory) : emptyCategoryForm
   );
   const [categoryStatus, setCategoryStatus] = useState('');
+  const [uploadStatus, setUploadStatus] = useState('');
   const [isSavingCategory, setIsSavingCategory] = useState(false);
   const [isDeletingCategory, setIsDeletingCategory] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   function updateCategoryField(field: keyof CategoryFormState, value: string) {
     setCategoryForm((currentForm) => {
@@ -51,6 +57,42 @@ export default function CategoryForm({ initialCategory }: CategoryFormProps) {
       }
       return { ...currentForm, [field]: value };
     });
+  }
+
+  async function uploadCategoryImage(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setUploadStatus('Please select a valid image file.');
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setUploadStatus('');
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Upload failed');
+      }
+
+      setCategoryForm((currentForm) => ({ ...currentForm, image_url: data.url }));
+      setUploadStatus('Category image uploaded.');
+    } catch (error: unknown) {
+      setUploadStatus(error instanceof Error ? error.message : 'Could not upload category image.');
+    } finally {
+      setIsUploadingImage(false);
+    }
   }
 
   async function handleDeleteCategory() {
@@ -172,6 +214,60 @@ export default function CategoryForm({ initialCategory }: CategoryFormProps) {
             placeholder="e.g. kids"
           />
         </label>
+
+        <div className="space-y-3 md:col-span-2">
+          <span className={labelClass}>Category Image</span>
+          <div className="grid gap-4 md:grid-cols-[220px_1fr]">
+            <div className="relative aspect-[3/4] overflow-hidden border border-white/10 bg-black">
+              {categoryForm.image_url ? (
+                <Image
+                  src={categoryForm.image_url}
+                  alt={`${categoryForm.name || 'Category'} image preview`}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center text-on-surface-variant/60">
+                  <span className="material-symbols-outlined text-3xl">image</span>
+                  <span className="font-label-caps text-[10px] uppercase tracking-widest">
+                    No Image
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col justify-center gap-3">
+              <label className="inline-flex w-fit cursor-pointer items-center justify-center gap-2 border border-white/15 px-5 py-3 font-label-caps text-xs font-bold text-primary transition-all hover:bg-white/5">
+                <span className="material-symbols-outlined text-base">
+                  {isUploadingImage ? 'sync' : 'cloud_upload'}
+                </span>
+                {isUploadingImage ? 'Uploading...' : 'Upload Category Image'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={isUploadingImage || isSavingCategory || isDeletingCategory}
+                  onChange={uploadCategoryImage}
+                />
+              </label>
+
+              <input
+                className={fieldClass}
+                value={categoryForm.image_url}
+                onChange={(event) => updateCategoryField('image_url', event.target.value)}
+                placeholder="/images/product/category-image.png"
+              />
+
+              <p className="text-xs leading-relaxed text-on-surface-variant/70">
+                Uploaded category images are saved in public/images/product and used on the home page category grid.
+              </p>
+
+              {uploadStatus && (
+                <p className="text-xs text-primary-container">{uploadStatus}</p>
+              )}
+            </div>
+          </div>
+        </div>
 
         <div className="flex flex-col gap-4 pt-4 md:col-span-2">
           {categoryStatus && (

@@ -776,13 +776,13 @@ export default function CheckoutPage() {
                       )
                     </p>
                   )}
-                  {couponVerified && appliedPromo && discount === 0 && (
-                    <p className="font-label-caps text-[9px] text-secondary-container mt-1">
+                   {couponVerified && appliedPromo && discount === 0 && (
+                    <p className="font-label-caps text-[9px] text-secondary mt-1">
                       MINIMUM SPEND OF RM {Number(appliedPromo.min_spend).toFixed(2)} REQUIRED
                     </p>
                   )}
                   {couponError && (
-                    <p className="font-label-caps text-[9px] text-secondary-container">{couponError}</p>
+                    <p className="font-label-caps text-[9px] text-secondary">{couponError}</p>
                   )}
                 </div>
 
@@ -797,7 +797,7 @@ export default function CheckoutPage() {
                     <span className="text-primary-container font-bold">FREE</span>
                   </div>
                   {discount > 0 && (
-                    <div className="flex justify-between font-label-caps text-xs text-secondary-container">
+                    <div className="flex justify-between font-label-caps text-xs text-secondary">
                       <span>ACCESS CODE REDUCTION</span>
                       <span className="font-bold">-RM {discount.toFixed(2)}</span>
                     </div>
@@ -888,7 +888,7 @@ export default function CheckoutPage() {
             </div>
             <button
               onClick={() => setCheckoutStep('idle')}
-              className="bg-primary text-black font-label-caps text-xs px-6 py-3 uppercase hover:bg-primary-container transition-colors cursor-pointer"
+              className="bg-primary text-background font-label-caps text-xs px-6 py-3 uppercase hover:bg-primary-container hover:text-background transition-colors cursor-pointer"
             >
               Retry Transaction
             </button>

@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getCategoryById, updateCategory, deleteCategory, type CategoryInput } from '@/lib/db';
 import { isAdminRequest } from '@/lib/adminAuth';
+import { revalidatePath } from 'next/cache';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Internal server error';
 }
 
-function parseCategoryPayload(payload: any): CategoryInput {
+type CategoryPayload = Record<string, unknown>;
+
+function parseCategoryPayload(payload: CategoryPayload): CategoryInput {
   if (payload.name === undefined || payload.name === null || String(payload.name).trim() === '') {
     throw new Error('name is required');
   }
@@ -21,7 +24,11 @@ function parseCategoryPayload(payload: any): CategoryInput {
 
   return {
     name: String(payload.name).trim(),
-    slug
+    slug,
+    image_url:
+      payload.image_url === undefined || payload.image_url === null || String(payload.image_url).trim() === ''
+        ? null
+        : String(payload.image_url).trim()
   };
 }
 
@@ -65,6 +72,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const cat = parseCategoryPayload(payload);
     const updated = await updateCategory(catId, cat);
 
+    revalidatePath('/admin/categories');
+    revalidatePath('/');
+
     return NextResponse.json(updated);
   } catch (e: unknown) {
     console.error('Error updating category API:', e);
@@ -85,6 +95,10 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
 
     await deleteCategory(catId);
+
+    revalidatePath('/admin/categories');
+    revalidatePath('/');
+
     return NextResponse.json({ success: true });
   } catch (e: unknown) {
     console.error('Error deleting category API:', e);

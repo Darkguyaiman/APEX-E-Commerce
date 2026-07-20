@@ -129,7 +129,7 @@ export default async function OrdersPage() {
                     Subtotal <span className="text-primary">RM {order.subtotal.toFixed(2)}</span>
                   </div>
                   <div className="text-on-surface-variant">
-                    Discount <span className="text-secondary-container">{order.discount && order.discount > 0 ? `-RM ${order.discount.toFixed(2)}` : '—'}</span>
+                    Discount <span className="text-secondary">{order.discount && order.discount > 0 ? `-RM ${order.discount.toFixed(2)}` : '—'}</span>
                   </div>
                   <div className="text-on-surface-variant">
                     Tax <span className="text-primary">RM {order.tax.toFixed(2)}</span>

@@ -19,3 +19,5 @@ export default async function AdminMessagesPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

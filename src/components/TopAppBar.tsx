@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import CustomerNav from '@/components/CustomerNav';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const TopAppBar: React.FC = () => {
   const { getCartCount, setIsCartOpen } = useCart();
@@ -41,7 +42,7 @@ const TopAppBar: React.FC = () => {
           HOME
         </Link>
         <Link
-          className={`font-label-caps text-label-caps tracking-widest transition-all ${pathname === '/shop' || pathname.startsWith('/shop/') ? 'text-primary border-b border-primary-container pb-1' : 'text-on-surface-variant hover:text-primary'
+          className={`font-label-caps text-label-caps tracking-widest transition-all ${pathname === '/shop' || pathname.startsWith('/shop/') || (pathname && pathname.startsWith('/product/')) ? 'text-primary border-b border-primary-container pb-1' : 'text-on-surface-variant hover:text-primary'
             }`}
           href="/shop"
         >
@@ -66,6 +67,7 @@ const TopAppBar: React.FC = () => {
       {/* Cart Counter Trigger */}
       <div className="flex items-center gap-4">
         <CustomerNav />
+        <ThemeToggle className="p-2" />
         <button
           onClick={() => setIsCartOpen(true)}
           className="material-symbols-outlined relative hover:opacity-80 transition-opacity active:scale-95 duration-150 p-2 cursor-pointer"

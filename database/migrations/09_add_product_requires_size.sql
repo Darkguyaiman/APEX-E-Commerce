@@ -1,0 +1,2 @@
+ALTER TABLE products
+ADD COLUMN requires_size BOOLEAN NOT NULL DEFAULT TRUE AFTER tags;

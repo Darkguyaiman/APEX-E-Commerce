@@ -129,7 +129,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   <span className="text-primary font-bold">RM {order.subtotal.toFixed(2)}</span>
                 </div>
                 {order.discount && order.discount > 0 ? (
-                  <div className="flex justify-between text-secondary-container">
+                  <div className="flex justify-between text-secondary">
                     <span>Discount {order.coupon_code ? `(${order.coupon_code})` : ''}</span>
                     <span className="font-bold">-RM {order.discount.toFixed(2)}</span>
                   </div>
@@ -184,7 +184,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 </div>
               </div>
             ) : (
-              <p className="font-label-caps text-xs text-secondary-container tracking-wider">
+              <p className="font-label-caps text-xs text-secondary tracking-wider">
                 DELIVERY PROOF FILE PENDING COURIER UPLOAD
               </p>
             )}

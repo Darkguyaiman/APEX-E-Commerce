@@ -10,15 +10,37 @@ interface ProductCardProps {
   product: Product;
 }
 
-const SIZES = ['7.5', '8.5', '9.5', '10.5', '11.5'];
+const DEFAULT_SIZES = ['7.5', '8.5', '9.5', '10.5', '11.5'];
+
+function getProductSizes(product: Product) {
+  const customSizes = product.size_options
+    ?.split(',')
+    .map((size) => size.trim())
+    .filter(Boolean);
+
+  return customSizes && customSizes.length > 0 ? customSizes : DEFAULT_SIZES;
+}
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
   const [showSizes, setShowSizes] = useState(false);
+  const requiresSize = product.requires_size === undefined || product.requires_size === null
+    ? true
+    : Boolean(product.requires_size);
+  const sizeOptions = getProductSizes(product);
 
   const handleSelectSize = (size: string) => {
     addToCart(product, size);
     setShowSizes(false);
+  };
+
+  const handleQuickAdd = () => {
+    if (requiresSize) {
+      setShowSizes(true);
+      return;
+    }
+
+    addToCart(product, 'ONE SIZE');
   };
 
   return (
@@ -64,13 +86,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               SELECT PERFORMANCE SIZE
             </h4>
             <div className="grid grid-cols-3 gap-2 w-full max-w-[240px]">
-              {SIZES.map((size) => (
+              {sizeOptions.map((size) => (
                 <button
                   key={size}
                   onClick={() => handleSelectSize(size)}
                   className="relative z-30 h-10 border border-white/10 font-label-caps text-xs text-primary hover:bg-primary-container hover:text-black transition-colors cursor-pointer"
                 >
-                  US {size}
+                  {product.size_options ? size : `US ${size}`}
                 </button>
               ))}
             </div>
@@ -83,11 +105,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         ) : (
           <button
-            onClick={() => setShowSizes(true)}
+            onClick={handleQuickAdd}
             className="absolute bottom-4 right-4 bg-primary-container w-10 h-10 flex items-center justify-center text-on-background active:scale-90 hover:brightness-110 transition-all cursor-pointer z-30"
-            title="Add cleat to cart"
+            title={requiresSize ? 'Select size' : 'Add to cart'}
           >
-            <span className="material-symbols-outlined text-black font-bold">add</span>
+            <span className="material-symbols-outlined text-on-primary-container font-bold">add</span>
           </button>
         )}
       </div>

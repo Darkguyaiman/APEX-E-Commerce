@@ -22,3 +22,5 @@ export default async function AdminProductsPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

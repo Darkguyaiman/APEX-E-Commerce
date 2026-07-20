@@ -32,6 +32,8 @@ export interface Product {
   description: string;
   type_chip: string | null;
   tags: string | null;
+  requires_size?: boolean | number;
+  size_options?: string | null;
   images?: ProductImage[];
   faqs?: string | null;
   videos?: ProductVideo[];
@@ -50,6 +52,8 @@ export interface ProductInput {
   description: string;
   type_chip: string | null;
   tags: string | null;
+  requires_size: boolean;
+  size_options: string | null;
   images?: ProductImage[];
   faqs?: string | null;
   videos?: ProductVideo[];
@@ -92,11 +96,13 @@ export interface Category {
   id: number;
   name: string;
   slug: string;
+  image_url: string | null;
 }
 
 export interface CategoryInput {
   name: string;
   slug: string;
+  image_url: string | null;
 }
 
 export interface MembershipApplication {
@@ -570,13 +576,16 @@ function writeFallbackMessages(messages: ContactMessage[]) {
 }
 
 const STATIC_CATEGORIES: Category[] = [
-  { id: 1, name: 'Men', slug: 'men' },
-  { id: 2, name: 'Women', slug: 'women' },
-  { id: 3, name: 'Kit', slug: 'kit' }
+  { id: 1, name: 'Men', slug: 'men', image_url: '/images/collection-mens.jpg' },
+  { id: 2, name: 'Women', slug: 'women', image_url: '/images/collection-womens.jpg' },
+  { id: 3, name: 'Kit', slug: 'kit', image_url: '/images/collection-speedlab.jpg' }
 ];
 
 function readFallbackCategories(): Category[] {
-  return readJsonFile<Category[]>(categoriesFallbackPath, STATIC_CATEGORIES);
+  return readJsonFile<Category[]>(categoriesFallbackPath, STATIC_CATEGORIES).map((category) => ({
+    ...category,
+    image_url: category.image_url || null
+  }));
 }
 
 function writeFallbackCategories(categories: Category[]) {
@@ -681,9 +690,38 @@ export async function rawQuery<T>(sql: string, params?: QueryParam[]): Promise<T
 }
 
 // Interface for fetching products
+function normalizeProduct(product: Product): Product {
+  return {
+    ...product,
+    requires_size: product.requires_size === undefined || product.requires_size === null
+      ? true
+      : Boolean(product.requires_size),
+    size_options: product.size_options || null
+  };
+}
+
+function normalizeProducts(products: Product[]): Product[] {
+  return products.map(normalizeProduct);
+}
+
+async function ensureProductsSizeColumn() {
+  try {
+    await rawQuery('ALTER TABLE products ADD COLUMN requires_size BOOLEAN NOT NULL DEFAULT TRUE AFTER tags');
+  } catch {
+    // Column may already exist or the local fallback may be active.
+  }
+
+  try {
+    await rawQuery('ALTER TABLE products ADD COLUMN size_options VARCHAR(255) NULL AFTER requires_size');
+  } catch {
+    // Column may already exist or the local fallback may be active.
+  }
+}
+
 export async function getProducts(category?: string): Promise<Product[]> {
   try {
     if (isMockDb) throw new Error('Local fallback triggered');
+    await ensureProductsSizeColumn();
     
     let sql = 'SELECT * FROM products';
     const params: QueryParam[] = [];
@@ -691,14 +729,14 @@ export async function getProducts(category?: string): Promise<Product[]> {
       sql += ' WHERE category = ?';
       params.push(category);
     }
-    return await rawQuery<Product[]>(sql, params);
+    return normalizeProducts(await rawQuery<Product[]>(sql, params));
   } catch {
     // Local static fallback
     const fallbackProducts = readFallbackProducts();
     if (category) {
-      return fallbackProducts.filter(p => p.category === category);
+      return normalizeProducts(fallbackProducts.filter(p => p.category === category));
     }
-    return fallbackProducts;
+    return normalizeProducts(fallbackProducts);
   }
 }
 
@@ -759,6 +797,7 @@ export async function setShopHeroProductId(productId: number): Promise<number> {
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
     if (isMockDb) throw new Error('Local fallback triggered');
+    await ensureProductsSizeColumn();
     const rows = await rawQuery<Product[]>('SELECT * FROM products WHERE slug = ?', [slug]);
     if (rows.length > 0) {
       const product = rows[0];
@@ -768,7 +807,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       ]);
       product.images = images;
       product.videos = videos;
-      return product;
+      return normalizeProduct(product);
     }
     return null;
   } catch {
@@ -781,13 +820,14 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
         product.videos = [];
       }
     }
-    return product;
+    return product ? normalizeProduct(product) : null;
   }
 }
 
 export async function getProductById(id: number): Promise<Product | null> {
   try {
     if (isMockDb) throw new Error('Local fallback triggered');
+    await ensureProductsSizeColumn();
     const rows = await rawQuery<Product[]>('SELECT * FROM products WHERE id = ?', [id]);
     if (rows.length > 0) {
       const product = rows[0];
@@ -797,7 +837,7 @@ export async function getProductById(id: number): Promise<Product | null> {
       ]);
       product.images = images;
       product.videos = videos;
-      return product;
+      return normalizeProduct(product);
     }
     return null;
   } catch {
@@ -810,7 +850,7 @@ export async function getProductById(id: number): Promise<Product | null> {
         product.videos = [];
       }
     }
-    return product;
+    return product ? normalizeProduct(product) : null;
   }
 }
 
@@ -818,6 +858,7 @@ export async function createProduct(product: ProductInput): Promise<Product> {
   try {
     const { connected } = await checkConnection();
     if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureProductsSizeColumn();
 
     // Determine the main image
     let mainImageUrl = product.image_url;
@@ -828,8 +869,8 @@ export async function createProduct(product: ProductInput): Promise<Product> {
 
     const result = await rawQuery<ResultSetHeader>(
       `INSERT INTO products
-       (name, slug, price, original_price, category, image_url, colorway, weight_grams, traction_type, description, type_chip, tags, faqs)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (name, slug, price, original_price, category, image_url, colorway, weight_grams, traction_type, description, type_chip, tags, requires_size, size_options, faqs)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         product.name,
         product.slug,
@@ -843,6 +884,8 @@ export async function createProduct(product: ProductInput): Promise<Product> {
         product.description,
         product.type_chip,
         product.tags,
+        product.requires_size,
+        product.size_options,
         product.faqs || null
       ]
     );
@@ -913,6 +956,7 @@ export async function updateProduct(id: number, product: ProductInput): Promise<
   try {
     const { connected } = await checkConnection();
     if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureProductsSizeColumn();
 
     // Determine the main image
     let mainImageUrl = product.image_url;
@@ -924,7 +968,7 @@ export async function updateProduct(id: number, product: ProductInput): Promise<
     await rawQuery<ResultSetHeader>(
       `UPDATE products
        SET name = ?, slug = ?, price = ?, original_price = ?, category = ?, image_url = ?, colorway = ?,
-           weight_grams = ?, traction_type = ?, description = ?, type_chip = ?, tags = ?, faqs = ?
+           weight_grams = ?, traction_type = ?, description = ?, type_chip = ?, tags = ?, requires_size = ?, size_options = ?, faqs = ?
        WHERE id = ?`,
       [
         product.name,
@@ -939,6 +983,8 @@ export async function updateProduct(id: number, product: ProductInput): Promise<
         product.description,
         product.type_chip,
         product.tags,
+        product.requires_size,
+        product.size_options,
         product.faqs || null,
         id
       ]
@@ -1788,10 +1834,31 @@ export async function deleteContactMessage(id: number): Promise<void> {
 
 // ==================== Categories ====================
 
+async function ensureCategoryImageColumn() {
+  try {
+    const columns = await rawQuery<Array<{ Field: string }>>('SHOW COLUMNS FROM categories LIKE ?', ['image_url']);
+    if (columns.length === 0) {
+      await rawQuery<ResultSetHeader>('ALTER TABLE categories ADD COLUMN image_url VARCHAR(255) NULL AFTER slug');
+      await rawQuery<ResultSetHeader>(
+        `UPDATE categories
+         SET image_url = CASE slug
+           WHEN 'men' THEN '/images/collection-mens.jpg'
+           WHEN 'women' THEN '/images/collection-womens.jpg'
+           WHEN 'kit' THEN '/images/collection-speedlab.jpg'
+           ELSE image_url
+         END`
+      );
+    }
+  } catch {
+    // Older local databases may not be reachable; callers fall back to JSON data.
+  }
+}
+
 export async function getCategories(): Promise<Category[]> {
   try {
     const { connected } = await checkConnection();
     if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureCategoryImageColumn();
 
     return await rawQuery<Category[]>(
       'SELECT * FROM categories ORDER BY id ASC'
@@ -1805,10 +1872,11 @@ export async function createCategory(cat: CategoryInput): Promise<Category> {
   try {
     const { connected } = await checkConnection();
     if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureCategoryImageColumn();
 
     const result = await rawQuery<ResultSetHeader>(
-      `INSERT INTO categories (name, slug) VALUES (?, ?)`,
-      [cat.name, cat.slug]
+      `INSERT INTO categories (name, slug, image_url) VALUES (?, ?, ?)`,
+      [cat.name, cat.slug, cat.image_url]
     );
 
     return {
@@ -1845,6 +1913,7 @@ export async function getCategoryById(id: number): Promise<Category | null> {
   try {
     const { connected } = await checkConnection();
     if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureCategoryImageColumn();
 
     const rows = await rawQuery<Category[]>('SELECT * FROM categories WHERE id = ?', [id]);
     return rows.length > 0 ? rows[0] : null;
@@ -1857,10 +1926,11 @@ export async function updateCategory(id: number, cat: CategoryInput): Promise<Ca
   try {
     const { connected } = await checkConnection();
     if (!connected || isMockDb) throw new Error('Local fallback triggered');
+    await ensureCategoryImageColumn();
 
     await rawQuery<ResultSetHeader>(
-      'UPDATE categories SET name = ?, slug = ? WHERE id = ?',
-      [cat.name, cat.slug, id]
+      'UPDATE categories SET name = ?, slug = ?, image_url = ? WHERE id = ?',
+      [cat.name, cat.slug, cat.image_url, id]
     );
 
     return {
@@ -2008,4 +2078,3 @@ export async function deletePromoCode(id: number): Promise<void> {
     writeFallbackPromoCodes(promos.filter(p => p.id !== id));
   }
 }
-

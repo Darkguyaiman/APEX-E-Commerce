@@ -1,19 +1,34 @@
 import Link from 'next/link';
-import { getProducts, getTestimonials, getContactMessages, getMembershipApplications, getAdminOrders, getPromoCodes } from '@/lib/db';
+import { getProducts, getTestimonials, getContactMessages, getMembershipApplications, getAdminOrders, getPromoCodes, getCategories } from '@/lib/db';
 
 export default async function AdminDashboardPage() {
-  const [products, testimonials, messages, memberships, orders, promos] = await Promise.all([
+  const [products, testimonials, messages, memberships, orders, promos, categories] = await Promise.all([
     getProducts(),
     getTestimonials(),
     getContactMessages(),
     getMembershipApplications(),
     getAdminOrders(),
-    getPromoCodes()
+    getPromoCodes(),
+    getCategories()
   ]);
 
-  const menProducts = products.filter((product) => product.category === 'men').length;
-  const womenProducts = products.filter((product) => product.category === 'women').length;
-  const kitProducts = products.filter((product) => product.category === 'kit').length;
+  const productCountByCategory = products.reduce<Record<string, number>>((counts, product) => {
+    counts[product.category] = (counts[product.category] || 0) + 1;
+    return counts;
+  }, {});
+  const categorySlugs = new Set(categories.map((category) => category.slug));
+  const catalogMixRows = [
+    ...categories.map((category) => ({
+      label: category.name,
+      count: productCountByCategory[category.slug] || 0
+    })),
+    ...Object.entries(productCountByCategory)
+      .filter(([slug]) => !categorySlugs.has(slug))
+      .map(([slug, count]) => ({
+        label: slug,
+        count
+      }))
+  ];
   const avgRating = testimonials.length
     ? testimonials.reduce((sum, testimonial) => sum + Number(testimonial.rating), 0) / testimonials.length
     : 0;
@@ -64,12 +79,8 @@ export default async function AdminDashboardPage() {
           </div>
 
           <div className="space-y-4">
-            {[
-              ['Men', menProducts],
-              ['Women', womenProducts],
-              ['Kit', kitProducts]
-            ].map(([label, count]) => {
-              const width = products.length ? (Number(count) / products.length) * 100 : 0;
+            {catalogMixRows.map(({ label, count }) => {
+              const width = products.length ? (count / products.length) * 100 : 0;
 
               return (
                 <div key={label}>
@@ -121,3 +132,5 @@ export default async function AdminDashboardPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

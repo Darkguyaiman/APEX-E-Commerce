@@ -55,7 +55,7 @@ const CartDrawer: React.FC = () => {
               </p>
               <button 
                 onClick={() => setIsCartOpen(false)}
-                className="bg-primary text-black font-label-caps text-label-caps px-6 py-3 uppercase hover:bg-primary-container transition-colors mt-2"
+                className="bg-primary text-background font-label-caps text-label-caps px-6 py-3 uppercase hover:bg-primary-container hover:text-background transition-colors mt-2 cursor-pointer"
               >
                 RETURN TO SHOP
               </button>
