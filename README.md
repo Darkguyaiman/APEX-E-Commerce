@@ -1,6 +1,6 @@
 # Apex Performance Gear
 
-Apex Performance Gear is a production-oriented football equipment storefront built with Next.js, TypeScript, Tailwind CSS v4, MySQL, and a full admin console. It supports catalog browsing, product detail pages, cart and checkout flows, customer authentication, Google OAuth, promo codes, order tracking, memberships, testimonials, contact messages, and local fallback persistence for development.
+Apex Performance Gear is a production-oriented football equipment storefront built with Next.js, TypeScript, Tailwind CSS v4, MySQL, and a full admin console. It supports catalog browsing, product detail pages, cart and checkout flows, customer authentication, Google OAuth, promo codes, order tracking, memberships, testimonials, and contact messages.
 
 ## Table of Contents
 
@@ -25,7 +25,6 @@ Apex Performance Gear is a production-oriented football equipment storefront bui
 - Customer auth with email/password, email verification, session cookies, and optional Google OAuth.
 - Admin console for products, categories, orders, promo codes, testimonials, memberships, and messages.
 - Raw MySQL access through `mysql2` with transactional order writes and no ORM dependency.
-- JSON fallback persistence for local development when MySQL is unavailable.
 - PWA assets, manifest, service worker registration, local fonts, and self-hosted image assets.
 
 ## Architecture
@@ -38,7 +37,6 @@ flowchart TD
     API[Route Handlers and Server Actions]
     Auth[Customer and Admin Auth]
     DB[(MySQL Database)]
-    Fallback[(Local JSON Fallback Files)]
     SMTP[SMTP Provider]
     OAuth[Google OAuth]
     Public[Self-hosted Assets in public/]
@@ -48,7 +46,6 @@ flowchart TD
     UI --> API
     API --> Auth
     API --> DB
-    API --> Fallback
     API --> SMTP
     Auth --> OAuth
     App --> Public
@@ -62,7 +59,7 @@ sequenceDiagram
     participant Storefront as Storefront UI
     participant Checkout as /api/checkout
     participant Promo as Promo Lookup
-    participant Database as MySQL or JSON Fallback
+    participant Database as MySQL
     participant Admin as Admin Console
 
     Customer->>Storefront: Add products to cart
@@ -146,7 +143,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The app can run without MySQL during local development. When the database connection is unavailable, data is read from seeded in-memory/static values and persisted to local fallback files such as `.orders_fallback.json`, `.customers_fallback.json`, and related JSON files.
+The app requires MySQL for local development and production. Load `database/schema.sql` before starting the app so catalog, auth, checkout, and admin workflows have a database available.
 
 ## Database Setup
 
@@ -220,7 +217,7 @@ src/
 - Database access is centralized in `src/lib/db.ts`.
 - Authentication helpers live in `src/lib/adminAuth.ts` and `src/lib/customerAuth.ts`.
 - Verification email delivery is handled by `src/lib/mailer.ts`.
-- Fallback JSON files are development artifacts and should not be treated as a production data store.
+- MySQL is required for all persistent data access; the app does not maintain local JSON data stores.
 - The service worker is registered only in production builds.
 - Static images, icons, and fonts are served from `public/` for predictable asset delivery.
 

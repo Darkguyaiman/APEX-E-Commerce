@@ -20,7 +20,7 @@ Avoid generic marketplace styling, soft lifestyle ecommerce patterns, pale neutr
 Make product imagery and specs do the selling.
 Keep admin workflows dense, predictable, and fast to scan.
 Use the established high-contrast Apex visual system without reducing form clarity.
-Treat database fallback mode as a first-class local development path.
+Require MySQL for local development and production data access.
 Prefer direct inline controls over modal-heavy management.
 
 ## Accessibility & Inclusion
