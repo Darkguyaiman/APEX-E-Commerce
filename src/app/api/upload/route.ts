@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isAdminRequest } from '@/lib/adminAuth';
+import { getUploadDir } from '@/lib/uploadFiles';
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
@@ -24,20 +25,20 @@ export async function POST(request: Request) {
     }
 
     // Create target directory if it doesn't exist
-    const uploadDir = path.join(process.cwd(), 'public', 'images', 'product');
+    const uploadDir = getUploadDir();
     await fs.mkdir(uploadDir, { recursive: true });
 
     // Generate a unique filename to prevent collisions
     const fileExtension = path.extname(file.name) || '.png';
     const uniqueFilename = `${crypto.randomUUID()}${fileExtension}`;
-    const filePath = path.join(uploadDir, uniqueFilename);
+    const filePath = path.join(/*turbopackIgnore: true*/ uploadDir, uniqueFilename);
 
     // Convert to buffer and write to disk
     const buffer = Buffer.from(await file.arrayBuffer());
     await fs.writeFile(filePath, buffer);
 
-    // Return the relative public path
-    const publicUrl = `/images/product/${uniqueFilename}`;
+    // Return an app-served URL instead of relying on static public assets.
+    const publicUrl = `/api/uploads/${uniqueFilename}`;
     return NextResponse.json({ url: publicUrl });
 
   } catch (e: unknown) {
@@ -47,3 +48,4 @@ export async function POST(request: Request) {
 }
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
