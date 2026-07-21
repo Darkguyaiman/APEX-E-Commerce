@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
+import path from 'path';
 import {
   getImageContentType,
   getLegacyProductUploadFilePath,
   getUploadFilePath
 } from '@/lib/uploadFiles';
+
+const fallbackImagePath = path.join(process.cwd(), 'public', 'images', 'product', 'ghost.png');
 
 export async function GET(
   _request: Request,
@@ -30,7 +33,17 @@ export async function GET(
     }
   }
 
-  return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  try {
+    const fallbackImage = await fs.readFile(fallbackImagePath);
+    return new Response(fallbackImage, {
+      headers: {
+        'Cache-Control': 'public, max-age=300',
+        'Content-Type': 'image/png'
+      }
+    });
+  } catch {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
 }
 
 export const dynamic = 'force-dynamic';
