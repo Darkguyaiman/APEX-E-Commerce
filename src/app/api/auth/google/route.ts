@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getPublicUrl } from '@/lib/publicUrl';
 
 function getRedirectUri(request: Request) {
   return process.env.GOOGLE_REDIRECT_URI || new URL('/api/auth/google/callback', request.url).toString();
@@ -11,7 +12,7 @@ function configured(value: string | undefined) {
 export async function GET(request: Request) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   if (!configured(clientId)) {
-    return NextResponse.redirect(new URL('/login?error=google_config', request.url));
+    return NextResponse.redirect(getPublicUrl('/login?error=google_config', request));
   }
 
   const url = new URL(request.url);

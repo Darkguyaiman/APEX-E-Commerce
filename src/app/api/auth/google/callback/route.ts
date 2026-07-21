@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { loginGoogleCustomer } from '@/lib/customerAuth';
+import { getPublicUrl } from '@/lib/publicUrl';
 
 function getRedirectUri(request: Request) {
   return process.env.GOOGLE_REDIRECT_URI || new URL('/api/auth/google/callback', request.url).toString();
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
   const next = readNextFromState(url.searchParams.get('state'));
 
   if (!configured(clientId) || !configured(clientSecret) || !code) {
-    return NextResponse.redirect(new URL('/login?error=google', request.url));
+    return NextResponse.redirect(getPublicUrl('/login?error=google', request));
   }
 
   try {
@@ -74,8 +75,8 @@ export async function GET(request: Request) {
       emailVerified: Boolean(profile.email_verified)
     });
 
-    return NextResponse.redirect(new URL(next, request.url));
+    return NextResponse.redirect(getPublicUrl(next, request));
   } catch {
-    return NextResponse.redirect(new URL('/login?error=google', request.url));
+    return NextResponse.redirect(getPublicUrl('/login?error=google', request));
   }
 }
