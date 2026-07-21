@@ -303,6 +303,49 @@ async function ensureSettingsTable() {
   );
 }
 
+async function ensureContactMessagesTable() {
+  await rawQuery(
+    `CREATE TABLE IF NOT EXISTS contact_messages (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL,
+      subject VARCHAR(255) NOT NULL,
+      message TEXT NOT NULL,
+      is_read BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
+  );
+}
+
+async function ensureMembershipApplicationsTable() {
+  await rawQuery(
+    `CREATE TABLE IF NOT EXISTS membership_applications (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      email VARCHAR(255) NOT NULL,
+      size VARCHAR(50) NOT NULL,
+      position VARCHAR(100) NOT NULL,
+      member_id VARCHAR(50) NOT NULL UNIQUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
+  );
+}
+
+async function ensurePromoCodesTable() {
+  await rawQuery(
+    `CREATE TABLE IF NOT EXISTS promo_codes (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      code VARCHAR(100) NOT NULL UNIQUE,
+      type VARCHAR(50) NOT NULL,
+      value DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+      min_spend DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+      applies_to VARCHAR(50) NOT NULL DEFAULT 'all',
+      product_ids VARCHAR(255) NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`
+  );
+}
+
 export async function getProducts(category?: string): Promise<Product[]> {
   await ensureProductSchema();
 
@@ -845,10 +888,12 @@ export async function getOrderById(orderId: number): Promise<AdminOrder | null> 
 }
 
 export async function getContactMessages(): Promise<ContactMessage[]> {
+  await ensureContactMessagesTable();
   return rawQuery<ContactMessage[]>('SELECT * FROM contact_messages ORDER BY created_at DESC, id DESC');
 }
 
 export async function createContactMessage(msg: ContactMessageInput): Promise<ContactMessage> {
+  await ensureContactMessagesTable();
   const result = await rawQuery<ResultSetHeader>(
     `INSERT INTO contact_messages (name, email, subject, message)
      VALUES (?, ?, ?, ?)`,
@@ -864,10 +909,12 @@ export async function createContactMessage(msg: ContactMessageInput): Promise<Co
 }
 
 export async function markMessageRead(id: number): Promise<void> {
+  await ensureContactMessagesTable();
   await rawQuery<ResultSetHeader>('UPDATE contact_messages SET is_read = TRUE WHERE id = ?', [id]);
 }
 
 export async function deleteContactMessage(id: number): Promise<void> {
+  await ensureContactMessagesTable();
   await rawQuery<ResultSetHeader>('DELETE FROM contact_messages WHERE id = ?', [id]);
 }
 
@@ -909,10 +956,12 @@ export async function updateCategory(id: number, cat: CategoryInput): Promise<Ca
 }
 
 export async function getMembershipApplications(): Promise<MembershipApplication[]> {
+  await ensureMembershipApplicationsTable();
   return rawQuery<MembershipApplication[]>('SELECT * FROM membership_applications ORDER BY created_at DESC, id DESC');
 }
 
 export async function createMembershipApplication(app: MembershipApplicationInput): Promise<MembershipApplication> {
+  await ensureMembershipApplicationsTable();
   const result = await rawQuery<ResultSetHeader>(
     'INSERT INTO membership_applications (name, email, size, position, member_id) VALUES (?, ?, ?, ?, ?)',
     [app.name, app.email, app.size, app.position, app.member_id]
@@ -921,14 +970,17 @@ export async function createMembershipApplication(app: MembershipApplicationInpu
 }
 
 export async function deleteMembershipApplication(id: number): Promise<void> {
+  await ensureMembershipApplicationsTable();
   await rawQuery<ResultSetHeader>('DELETE FROM membership_applications WHERE id = ?', [id]);
 }
 
 export async function getPromoCodes(): Promise<PromoCode[]> {
+  await ensurePromoCodesTable();
   return rawQuery<PromoCode[]>('SELECT * FROM promo_codes ORDER BY created_at DESC, id DESC');
 }
 
 export async function getPromoCodeByCode(code: string): Promise<PromoCode | null> {
+  await ensurePromoCodesTable();
   const rows = await rawQuery<PromoCode[]>(
     'SELECT * FROM promo_codes WHERE UPPER(code) = UPPER(?)',
     [code.trim()]
@@ -937,6 +989,7 @@ export async function getPromoCodeByCode(code: string): Promise<PromoCode | null
 }
 
 export async function createPromoCode(promo: PromoCodeInput): Promise<PromoCode> {
+  await ensurePromoCodesTable();
   const result = await rawQuery<ResultSetHeader>(
     'INSERT INTO promo_codes (code, type, value, min_spend, applies_to, product_ids) VALUES (?, ?, ?, ?, ?, ?)',
     [promo.code.toUpperCase(), promo.type, promo.value, promo.min_spend, promo.applies_to, promo.product_ids]
@@ -950,5 +1003,6 @@ export async function createPromoCode(promo: PromoCodeInput): Promise<PromoCode>
 }
 
 export async function deletePromoCode(id: number): Promise<void> {
+  await ensurePromoCodesTable();
   await rawQuery<ResultSetHeader>('DELETE FROM promo_codes WHERE id = ?', [id]);
 }

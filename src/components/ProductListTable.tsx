@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Product } from '@/lib/db';
 
@@ -122,6 +123,7 @@ export default function ProductListTable({ initialProducts, initialShopHeroProdu
         <table className="w-full border-collapse text-left text-sm text-on-surface">
           <thead>
             <tr className="border-b border-white/10 bg-surface-container-lowest font-label-caps text-[10px] text-on-surface-variant tracking-wider uppercase">
+              <th className="px-6 py-4">Image</th>
               <th className="px-6 py-4">Product</th>
               <th className="px-6 py-4">Hero</th>
               <th className="px-6 py-4">Category</th>
@@ -134,13 +136,28 @@ export default function ProductListTable({ initialProducts, initialShopHeroProdu
           <tbody className="divide-y divide-white/5">
             {filteredProducts.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-10 text-center text-on-surface-variant">
+                <td colSpan={8} className="px-6 py-10 text-center text-on-surface-variant">
                   No products found.
                 </td>
               </tr>
             ) : (
               filteredProducts.map((product) => (
                 <tr key={product.id} className="hover:bg-white/[0.02] transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="relative flex h-16 w-16 items-center justify-center overflow-hidden border border-white/10 bg-surface-container">
+                      {product.image_url ? (
+                        <Image
+                          src={product.image_url}
+                          alt={product.name}
+                          fill
+                          sizes="64px"
+                          className="object-contain p-1.5"
+                        />
+                      ) : (
+                        <span className="material-symbols-outlined text-on-surface-variant">image</span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4">
                     <span className="block font-headline-md text-xl uppercase italic leading-none text-primary">
                       {product.name}

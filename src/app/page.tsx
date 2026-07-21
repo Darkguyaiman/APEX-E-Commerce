@@ -12,6 +12,33 @@ const fallbackCategoryCards: Category[] = [
   { id: 3, name: 'Kit', slug: 'kit', image_url: '/images/collection-speedlab.jpg' }
 ];
 
+const orderSteps = [
+  {
+    label: '01',
+    icon: 'search',
+    title: 'Pick your setup',
+    description: 'Browse boots and kit by category, then open the product page for sizing, specs, and match details.'
+  },
+  {
+    label: '02',
+    icon: 'straighten',
+    title: 'Choose fit and quantity',
+    description: 'Select your boot size or one-size kit option, set the quantity, and add everything to your cart.'
+  },
+  {
+    label: '03',
+    icon: 'shopping_cart_checkout',
+    title: 'Checkout securely',
+    description: 'Confirm your cart, enter delivery details, apply any promo code, and place the order.'
+  },
+  {
+    label: '04',
+    icon: 'local_shipping',
+    title: 'Track the drop',
+    description: 'Your order moves into the admin workflow for processing, shipment updates, and delivery proof.'
+  }
+];
+
 function getCategoryHref(slug: string) {
   if (slug === 'men' || slug === 'women') {
     return `/shop/${slug}`;
@@ -156,6 +183,59 @@ export default function Home() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* How To Order Section */}
+      <section className="relative bg-background px-margin-mobile py-section-gap md:px-margin-desktop">
+        <div className="mx-auto grid max-w-container-max gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+          <div className="lg:sticky lg:top-28">
+            <div className="mb-5 inline-flex items-center gap-3 border border-white/10 bg-surface-container-low px-4 py-2">
+              <span className="material-symbols-outlined text-lg text-primary-container">receipt_long</span>
+              <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">
+                Order flow
+              </span>
+            </div>
+            <h3 className="font-headline-lg text-4xl uppercase italic leading-none text-primary md:text-headline-lg">
+              HOW TO ORDER
+            </h3>
+            <p className="mt-5 max-w-md font-body-lg text-base leading-relaxed text-on-surface-variant/80 md:text-body-lg">
+              From boot selection to delivery, the Apex order path is built for fast decisions and clear confirmation.
+            </p>
+            <Link
+              href="/shop"
+              className="mt-8 inline-flex items-center gap-2 bg-primary-container px-7 py-3 font-label-caps text-label-caps uppercase text-on-primary-container transition-all hover:brightness-110 active:scale-95 select-none"
+            >
+              Start shopping
+              <span className="material-symbols-outlined text-lg">arrow_forward</span>
+            </Link>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {orderSteps.map((step) => (
+              <article
+                key={step.label}
+                className="group border border-white/10 bg-surface-container-low p-6 transition-colors hover:border-primary-container/40"
+              >
+                <div className="mb-8 flex items-center justify-between gap-4">
+                  <span className="font-stats-value text-4xl leading-none text-primary-container">
+                    {step.label}
+                  </span>
+                  <span className="flex h-11 w-11 items-center justify-center border border-white/10 bg-surface-container text-primary-container transition-colors group-hover:border-primary-container/35">
+                    <span className="material-symbols-outlined text-2xl">
+                      {step.icon}
+                    </span>
+                  </span>
+                </div>
+                <h4 className="font-headline-md text-2xl uppercase italic leading-none text-primary">
+                  {step.title}
+                </h4>
+                <p className="mt-4 text-sm leading-relaxed text-on-surface-variant/80">
+                  {step.description}
+                </p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
